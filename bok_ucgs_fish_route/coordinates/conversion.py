@@ -65,7 +65,7 @@ def wgs84_to_utm(lon: float, lat: float) -> Tuple[float, float]:
     
     return easting, northing
 
-def convert_corners_if_wgs84(corner1: Tuple[float, float], corner2: Tuple[float, float]) -> Tuple[Tuple[float, float], Tuple[float, float], bool]:
+def convert_corners_from_wgs84_to_utm(corner1: Tuple[float, float], corner2: Tuple[float, float]) -> Tuple[Tuple[float, float], Tuple[float, float]]:
     """
     Check if the given corner coordinates are in WGS84 range and convert them to UTM if they are.
     
@@ -74,23 +74,11 @@ def convert_corners_if_wgs84(corner1: Tuple[float, float], corner2: Tuple[float,
         corner2 (Tuple[float, float]): Second corner coordinates as (x, y)
         
     Returns:
-        Tuple[Tuple[float, float], Tuple[float, float], bool]: 
+        Tuple[Tuple[float, float], Tuple[float, float]]:
             - Converted or original corner1 coordinates
             - Converted or original corner2 coordinates
-            - Boolean indicating whether conversion was performed
     """
     lon1, lat1 = corner1
     lon2, lat2 = corner2
-    
-    # Check if coordinates are in WGS84 range
-    if is_wgs84_coordinates(lon1, lat1) and is_wgs84_coordinates(lon2, lat2):
-        # Convert to UTM
-        utm_corner1 = wgs84_to_utm(lon1, lat1)
-        utm_corner2 = wgs84_to_utm(lon2, lat2)
-        
-        logger.info(f"Detected WGS84 coordinates. Converting to UTM: {corner1} -> {utm_corner1}, {corner2} -> {utm_corner2}")
-        
-        return utm_corner1, utm_corner2, True
-    
-    # If not in WGS84 range, assume they are already in UTM
-    return corner1, corner2, False
+
+    return wgs84_to_utm(lon1, lat1), wgs84_to_utm(lon2, lat2)

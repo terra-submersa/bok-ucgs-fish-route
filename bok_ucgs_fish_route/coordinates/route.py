@@ -1,16 +1,22 @@
 from typing import List, Tuple
 
 from bok_ucgs_fish_route.coordinates.waypoint import WaypointCoordinate
+from pyproj import CRS, Transformer
 
-
-def create_route_segment_from_coordinates(coordinates: List[Tuple[float, float]], altitude: float, speed: float) -> 'RouteSegment':
+def create_route_segment_from_coordinates(
+        coordinates: List[Tuple[float, float]],
+        altitude: float,
+        speed: float,
+        utm_epsg: str
+) -> 'RouteSegment':
     """
     Create a RouteSegment from a list of coordinate tuples, an altitude, and a speed.
     
     Args:
-        coordinates (List[Tuple[float, float]]): List of coordinate tuples (longitude, latitude)
+        coordinates (List[Tuple[float, float]]): List of coordinate tuples (northing, easting)
         altitude (float): Altitude in meters to apply to all waypoints
         speed (float): Speed in meters per second
+        utm_epsg (str): EPSG code for the UTM zone to use for the route
         
     Returns:
         RouteSegment: A route segment containing waypoints created from the coordinates
@@ -20,13 +26,19 @@ def create_route_segment_from_coordinates(coordinates: List[Tuple[float, float]]
     """
     if not coordinates:
         raise ValueError("Coordinates list must not be empty")
-    
+
+    crs_utm = CRS.from_epsg(utm_epsg)
+    crs_wgs84 = CRS.from_epsg(4326)  # EPSG:4326 = WGS84
+
+    # Set up transformer from UTM to WGS84
+    transformer = Transformer.from_crs(crs_utm, crs_wgs84, always_xy=True)
+
     # Convert each coordinate tuple to a WaypointCoordinate
-    waypoints = [
-        WaypointCoordinate(lon=coord[0], lat=coord[1], altitude=altitude)
-        for coord in coordinates
-    ]
-    
+    waypoints = []
+    for coord in coordinates:
+        lon, lat = transformer.transform(coord[0], coord[1])
+        waypoints.append(WaypointCoordinate(lon=lon, lat=lat, altitude=altitude))
+
     # Create and return a RouteSegment
     return RouteSegment(waypoints, speed)
 

@@ -1,12 +1,14 @@
 """
 Tests for the coordinate conversion utilities.
 """
+from unittest import TestCase
+
 import pytest
 from bok_ucgs_fish_route.coordinates.conversion import (
     is_wgs84_coordinates,
     get_utm_zone_for_coordinates,
     wgs84_to_utm,
-    convert_corners_if_wgs84
+    convert_corners_from_wgs84_to_utm
 )
 
 
@@ -53,7 +55,7 @@ class TestWgs84ToUtm:
         # Greenwich, UK (near the origin of UTM zone 31N)
         lon, lat = 0.0, 51.5
         easting, northing = wgs84_to_utm(lon, lat)
-        
+
         # The easting value depends on the specific implementation of the UTM projection
         # Just verify it's a reasonable UTM easting value (typically between 100000 and 900000)
         assert 100000 < easting < 900000
@@ -65,10 +67,10 @@ class TestWgs84ToUtm:
         # Two points close to each other
         lon1, lat1 = 10.0, 50.0
         lon2, lat2 = 10.01, 50.01
-        
+
         easting1, northing1 = wgs84_to_utm(lon1, lat1)
         easting2, northing2 = wgs84_to_utm(lon2, lat2)
-        
+
         # The difference should be small but measurable
         # For a 0.01 degree change, we expect differences in the range of meters to tens of meters
         # but the exact values depend on the latitude and the UTM zone
@@ -76,48 +78,17 @@ class TestWgs84ToUtm:
         assert 0 < abs(northing2 - northing1) < 2000
 
 
-class TestConvertCornersIfWgs84:
+class TestConvertCornersIfWgs84(TestCase):
     """Tests for the convert_corners_if_wgs84 function."""
 
     def test_convert_wgs84_corners(self):
         """Test conversion of WGS84 corners."""
-        corner1 = (10.0, 50.0)
-        corner2 = (10.1, 50.1)
-        
-        utm_corner1, utm_corner2, was_converted = convert_corners_if_wgs84(corner1, corner2)
-        
-        # Should be converted
-        assert was_converted is True
-        # UTM coordinates should be different from WGS84
-        assert utm_corner1 != corner1
-        assert utm_corner2 != corner2
-        # UTM coordinates should be in meters (much larger numbers)
-        assert abs(utm_corner1[0]) > 100000
-        assert abs(utm_corner1[1]) > 100000
+        corner1 = (23.134, 37.428)
+        corner2 = (23.234, 37.528)
 
-    def test_no_convert_non_wgs84_corners(self):
-        """Test that non-WGS84 corners are not converted."""
-        # These are outside WGS84 range
-        corner1 = (500000, 5000000)
-        corner2 = (510000, 5010000)
-        
-        result_corner1, result_corner2, was_converted = convert_corners_if_wgs84(corner1, corner2)
-        
-        # Should not be converted
-        assert was_converted is False
-        # Corners should be unchanged
-        assert result_corner1 == corner1
-        assert result_corner2 == corner2
+        utm_corner1, utm_corner2 = convert_corners_from_wgs84_to_utm(corner1, corner2)
 
-    def test_mixed_corners_no_convert(self):
-        """Test that mixed corners (one WGS84, one not) are not converted."""
-        corner1 = (10.0, 50.0)  # WGS84
-        corner2 = (500000, 5000000)  # Not WGS84
-        
-        result_corner1, result_corner2, was_converted = convert_corners_if_wgs84(corner1, corner2)
-        
-        # Should not be converted since both need to be WGS84
-        assert was_converted is False
-        # Corners should be unchanged
-        assert result_corner1 == corner1
-        assert result_corner2 == corner2
+        self.assertAlmostEqual(utm_corner1[0], 688816.90, delta=0.01)
+        self.assertAlmostEqual(utm_corner1[1], 4144491.15, delta=0.01)
+        self.assertAlmostEqual(utm_corner2[0], 697402.690, delta=0.01)
+        self.assertAlmostEqual(utm_corner2[1], 4155792.687, delta=0.01)

@@ -5,6 +5,7 @@
 ## Testing
 * your are using a TDD approach
 * You are using pytest
+* You are using unitest TestCase classes
 * Use parameterized tests whenever relevant
 
 ## Additional Information

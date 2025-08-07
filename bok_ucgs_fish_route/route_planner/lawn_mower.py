@@ -20,8 +20,8 @@ def create_route_segment_lawn_mower(
     that traverses the rectangle in parallel bands (lawn mower pattern).
 
     Args:
-        corner1 (Tuple[float, float]): First corner coordinates as (latitude, longitude)
-        corner2 (Tuple[float, float]): Second corner coordinates as (latitude, longitude)
+        corner1 (Tuple[float, float]): First corner coordinates as (longitude, latitude)
+        corner2 (Tuple[float, float]): Second corner coordinates as (longitude, latitude)
         speed (float): Speed in meters per second
         band_distance (float): Maximum distance between parallel bands in meters
         angle (float, optional): Angle in degrees for lawn mowing direction. 0 is South->North, 90 is East->West. Defaults to 0.0.
@@ -31,14 +31,14 @@ def create_route_segment_lawn_mower(
         RouteSegment: A route segment with a lawn mower pattern within the rectangle
 
     Example:
-        >>> corner1 = (37.428, 23.134)  # (lat, lon)
-        >>> corner2 = (37.430, 23.136)  # (lat, lon)
+        >>> corner1 = (23.134, 37.428)  # (lon, lat)
+        >>> corner2 = (23.136, 37.430)  # (lon, lat)
         >>> segment = create_route_segment_lawn_mower(corner1, corner2, 2.5, 10.0)
         >>> segment_angled = create_route_segment_lawn_mower(corner1, corner2, 2.5, 10.0, 45.0)
     """
     # Extract coordinates
-    lat1, lon1 = corner1
-    lat2, lon2 = corner2
+    lon1, lat1 = corner1
+    lon2, lat2 = corner2
 
     # Ensure lat1 <= lat2 and lon1 <= lon2
     lat_min, lat_max = min(lat1, lat2), max(lat1, lat2)
@@ -113,12 +113,12 @@ def _create_vertical_lawn_mower(lat_min: float, lat_max: float, lon_min: float, 
 
         # For even-indexed bands, go from south to north
         if i % 2 == 0:
-            waypoints.append(WaypointCoordinate(lat_min, lon))
-            waypoints.append(WaypointCoordinate(lat_max, lon))
+            waypoints.append(WaypointCoordinate(lon, lat_min))
+            waypoints.append(WaypointCoordinate(lon, lat_max))
         # For odd-indexed bands, go from north to south
         else:
-            waypoints.append(WaypointCoordinate(lat_max, lon))
-            waypoints.append(WaypointCoordinate(lat_min, lon))
+            waypoints.append(WaypointCoordinate(lon, lat_max))
+            waypoints.append(WaypointCoordinate(lon, lat_min))
             
     return RouteSegment(waypoints, speed)
 
@@ -164,12 +164,12 @@ def _create_horizontal_lawn_mower(lat_min: float, lat_max: float, lon_min: float
 
         # For even-indexed bands, go from west to east
         if i % 2 == 0:
-            waypoints.append(WaypointCoordinate(lat, lon_min))
-            waypoints.append(WaypointCoordinate(lat, lon_max))
+            waypoints.append(WaypointCoordinate(lon_min, lat))
+            waypoints.append(WaypointCoordinate(lon_max, lat))
         # For odd-indexed bands, go from east to west
         else:
-            waypoints.append(WaypointCoordinate(lat, lon_max))
-            waypoints.append(WaypointCoordinate(lat, lon_min))
+            waypoints.append(WaypointCoordinate(lon_max, lat))
+            waypoints.append(WaypointCoordinate(lon_min, lat))
             
     return RouteSegment(waypoints, speed)
 
@@ -362,7 +362,7 @@ def _create_angled_lawn_mower(lat_min: float, lat_max: float, lon_min: float, lo
             all_intersections.extend(band_intersections)
             
             # Add the waypoints
-            waypoints.append(WaypointCoordinate(band_intersections[0][0], band_intersections[0][1]))
-            waypoints.append(WaypointCoordinate(band_intersections[1][0], band_intersections[1][1]))
+            waypoints.append(WaypointCoordinate(band_intersections[0][1], band_intersections[0][0]))
+            waypoints.append(WaypointCoordinate(band_intersections[1][1], band_intersections[1][0]))
     
     return RouteSegment(waypoints, speed)

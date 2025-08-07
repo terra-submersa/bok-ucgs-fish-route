@@ -9,8 +9,8 @@ from bok_ucgs_fish_route.route_planner import create_route_segment_lawn_mower
 @pytest.mark.parametrize("corner1, corner2, speed, band_distance, angle, expected_direction", [
     # Test case 1: Small rectangle with horizontal bands (east-west)
     (
-        (37.428, 23.134),  # corner1 (lat1, lon1)
-        (37.430, 23.136),  # corner2 (lat2, lon2)
+        (23.134, 37.428),  # corner1 (lon1, lat1)
+        (23.136, 37.430),  # corner2 (lon2, lat2)
         2.5,  # speed
         50.0,  # band_distance in meters
         0.0,   # angle in degrees (South->North)
@@ -18,8 +18,8 @@ from bok_ucgs_fish_route.route_planner import create_route_segment_lawn_mower
     ),
     # Test case 2: Rectangle with vertical bands (north-south)
     (
-        (37.428, 23.134),  # corner1 (lat1, lon1)
-        (37.430, 23.140),  # corner2 (lat2, lon2) - wider rectangle
+        (23.134, 37.428),  # corner1 (lon1, lat1)
+        (23.140, 37.430),  # corner2 (lon2, lat2) - wider rectangle
         1.0,  # speed
         50.0,  # band_distance in meters
         0.0,   # angle in degrees (South->North)
@@ -27,8 +27,8 @@ from bok_ucgs_fish_route.route_planner import create_route_segment_lawn_mower
     ),
     # Test case 3: Rectangle with corners in different order
     (
-        (42.360, -71.095),  # corner1 (lat1, lon1)
-        (42.350, -71.105),  # corner2 (lat2, lon2) - corners in different order
+        (-71.095, 42.360),  # corner1 (lon1, lat1)
+        (-71.105, 42.350),  # corner2 (lon2, lat2) - corners in different order
         5.0,  # speed
         100.0,  # band_distance in meters
         0.0,   # angle in degrees (South->North)
@@ -36,8 +36,8 @@ from bok_ucgs_fish_route.route_planner import create_route_segment_lawn_mower
     ),
     # Test case 4: Horizontal bands with 90 degree angle (East->West)
     (
-        (37.428, 23.134),  # corner1 (lat1, lon1)
-        (37.430, 23.136),  # corner2 (lat2, lon2)
+        (23.134, 37.428),  # corner1 (lon1, lat1)
+        (23.136, 37.430),  # corner2 (lon2, lat2)
         2.5,  # speed
         50.0,  # band_distance in meters
         90.0,  # angle in degrees (East->West)
@@ -45,8 +45,8 @@ from bok_ucgs_fish_route.route_planner import create_route_segment_lawn_mower
     ),
     # Test case 5: Diagonal bands with 45 degree angle
     (
-        (37.428, 23.134),  # corner1 (lat1, lon1)
-        (37.430, 23.136),  # corner2 (lat2, lon2)
+        (23.134, 37.428),  # corner1 (lon1, lat1)
+        (23.136, 37.430),  # corner2 (lon2, lat2)
         2.5,  # speed
         50.0,  # band_distance in meters
         45.0,  # angle in degrees (diagonal)
@@ -74,8 +74,8 @@ def test_create_route_segment_lawn_mower(corner1, corner2, speed, band_distance,
     assert len(route_segment.waypoints) % 2 == 0
 
     # Extract coordinates for verification
-    lat1, lon1 = corner1
-    lat2, lon2 = corner2
+    lon1, lat1 = corner1
+    lon2, lat2 = corner2
     lat_min, lat_max = min(lat1, lat2), max(lat1, lat2)
     lon_min, lon_max = min(lon1, lon2), max(lon1, lon2)
 
@@ -113,8 +113,8 @@ def test_create_route_segment_lawn_mower(corner1, corner2, speed, band_distance,
 @pytest.mark.parametrize("angle", [0.0, 90.0])
 def test_lawn_mower_band_distance(angle):
     """Test that the distance between bands is at most the specified distance for standard angles."""
-    corner1 = (37.428, 23.134)
-    corner2 = (37.430, 23.136)
+    corner1 = (23.134, 37.428)
+    corner2 = (23.136, 37.430)
     band_distance = 50.0  # meters
     route_segment = create_route_segment_lawn_mower(corner1, corner2, 2.5, band_distance, angle)
 
@@ -154,8 +154,8 @@ def test_lawn_mower_band_distance(angle):
 
 def test_lawn_mower_rotated_bands():
     """Test that rotated bands (45 degrees) create a valid pattern."""
-    corner1 = (37.428, 23.134)
-    corner2 = (37.430, 23.136)
+    corner1 = (23.134, 37.428)
+    corner2 = (23.136, 37.430)
     band_distance = 50.0  # meters
     angle = 45.0  # degrees
     
@@ -174,8 +174,8 @@ def test_lawn_mower_rotated_bands():
     assert len(waypoints) % 2 == 0
     
     # Extract coordinates for verification
-    lat1, lon1 = corner1
-    lat2, lon2 = corner2
+    lon1, lat1 = corner1
+    lon2, lat2 = corner2
     lat_min, lat_max = min(lat1, lat2), max(lat1, lat2)
     lon_min, lon_max = min(lon1, lon2), max(lon1, lon2)
     
@@ -196,8 +196,8 @@ def test_lawn_mower_rotated_bands():
 
 def test_angled_lawn_mower_waypoints_on_perimeter():
     """Test that waypoints for angled lawn mowing are on the rectangle perimeter."""
-    corner1 = (37.428, 23.134)
-    corner2 = (37.430, 23.136)
+    corner1 = (23.134, 37.428)
+    corner2 = (23.136, 37.430)
     band_distance = 50.0  # meters
     angle = 45.0  # degrees
     
@@ -205,8 +205,8 @@ def test_angled_lawn_mower_waypoints_on_perimeter():
     
     # Extract waypoints and rectangle bounds
     waypoints = route_segment.waypoints
-    lat1, lon1 = corner1
-    lat2, lon2 = corner2
+    lon1, lat1 = corner1
+    lon2, lat2 = corner2
     lat_min, lat_max = min(lat1, lat2), max(lat1, lat2)
     lon_min, lon_max = min(lon1, lon2), max(lon1, lon2)
     

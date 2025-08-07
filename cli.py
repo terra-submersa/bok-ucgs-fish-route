@@ -13,31 +13,31 @@ from bok_ucgs_fish_route.exporter.map_exporter import export_route_segment_to_pn
 app = Flask(__name__)
 
 @app.cli.command("generate-perimeter-map")
-@click.argument("lat1", type=float)
 @click.argument("lon1", type=float)
-@click.argument("lat2", type=float)
+@click.argument("lat1", type=float)
 @click.argument("lon2", type=float)
+@click.argument("lat2", type=float)
 @click.argument("speed", type=float)
 @click.option("--epsg", type=int, default=3857, help="EPSG code for the map projection (default: 3857)")
 @click.option("--output", type=str, help="Output file path (optional)")
-def generate_perimeter_map(lat1, lon1, lat2, lon2, speed, epsg, output):
+def generate_perimeter_map(lon1, lat1, lon2, lat2, speed, epsg, output):
     """
     Generate a perimeter route map from two corner coordinates and a speed.
     
     Arguments:
-    LAT1: Latitude of the first corner in WGS84
     LON1: Longitude of the first corner in WGS84
-    LAT2: Latitude of the second corner in WGS84
+    LAT1: Latitude of the first corner in WGS84
     LON2: Longitude of the second corner in WGS84
+    LAT2: Latitude of the second corner in WGS84
     SPEED: Speed in meters per second
     
     Example:
-        flask generate-perimeter-map 37.428 23.134 37.430 23.136 2.5
+        flask generate-perimeter-map 23.134 37.428 23.136 37.430 2.5
     """
     try:
         # Create the perimeter route segment
-        corner1 = (lat1, lon1)
-        corner2 = (lat2, lon2)
+        corner1 = (lon1, lat1)
+        corner2 = (lon2, lat2)
         route_segment = create_route_segment_perimeter(corner1, corner2, speed)
         
         # Determine output path
@@ -46,7 +46,7 @@ def generate_perimeter_map(lat1, lon1, lat2, lon2, speed, epsg, output):
         else:
             # Create a temporary file if no output path is provided
             temp_dir = tempfile.gettempdir()
-            output_path = os.path.join(temp_dir, f"perimeter_map_{lat1}_{lon1}_{lat2}_{lon2}_{speed}.png")
+            output_path = os.path.join(temp_dir, f"perimeter_map_{lon1}_{lat1}_{lon2}_{lat2}_{speed}.png")
         
         # Export the route segment to a PNG image
         title = f"Perimeter Route (Speed: {speed} m/s)"
@@ -66,24 +66,24 @@ def generate_perimeter_map(lat1, lon1, lat2, lon2, speed, epsg, output):
         return None
 
 @app.cli.command("generate-lawn-mowing")
-@click.argument("lat1", type=float)
 @click.argument("lon1", type=float)
-@click.argument("lat2", type=float)
+@click.argument("lat1", type=float)
 @click.argument("lon2", type=float)
+@click.argument("lat2", type=float)
 @click.argument("speed", type=float)
 @click.argument("band_distance", type=float)
 @click.option("--angle", type=float, default=0.0, help="Angle in degrees for lawn mowing direction. 0 is South->North, 90 is East->West (default: 0.0)")
 @click.option("--epsg", type=int, default=3857, help="EPSG code for the map projection (default: 3857)")
 @click.option("--output", type=str, help="Output file path (optional)")
-def generate_lawn_mowing(lat1, lon1, lat2, lon2, speed, band_distance, angle, epsg, output):
+def generate_lawn_mowing(lon1, lat1, lon2, lat2, speed, band_distance, angle, epsg, output):
     """
     Generate a lawn mowing pattern route map from two corner coordinates, a speed, band distance, and optional angle.
     
     Arguments:
-    LAT1: Latitude of the first corner in WGS84
     LON1: Longitude of the first corner in WGS84
-    LAT2: Latitude of the second corner in WGS84
+    LAT1: Latitude of the first corner in WGS84
     LON2: Longitude of the second corner in WGS84
+    LAT2: Latitude of the second corner in WGS84
     SPEED: Speed in meters per second
     BAND_DISTANCE: Maximum distance between two bands in meters
     
@@ -91,13 +91,13 @@ def generate_lawn_mowing(lat1, lon1, lat2, lon2, speed, band_distance, angle, ep
     --angle: Angle in degrees for lawn mowing direction. 0 is South->North, 90 is East->West (default: 0.0)
     
     Example:
-        flask generate-lawn-mowing 37.428 23.134 37.430 23.136 2.5 10.0
-        flask generate-lawn-mowing 37.428 23.134 37.430 23.136 2.5 10.0 --angle 45.0
+        flask generate-lawn-mowing 23.134 37.428 23.136 37.430 2.5 10.0
+        flask generate-lawn-mowing 23.134 37.428 23.136 37.430 2.5 10.0 --angle 45.0
     """
     try:
         # Create the lawn mower route segment
-        corner1 = (lat1, lon1)
-        corner2 = (lat2, lon2)
+        corner1 = (lon1, lat1)
+        corner2 = (lon2, lat2)
         route_segment = create_route_segment_lawn_mower(
             corner1, 
             corner2, 
@@ -113,7 +113,7 @@ def generate_lawn_mowing(lat1, lon1, lat2, lon2, speed, band_distance, angle, ep
         else:
             # Create a temporary file if no output path is provided
             temp_dir = tempfile.gettempdir()
-            output_path = os.path.join(temp_dir, f"lawn_mower_map_{lat1}_{lon1}_{lat2}_{lon2}_{speed}_{band_distance}.png")
+            output_path = os.path.join(temp_dir, f"lawn_mower_map_{lon1}_{lat1}_{lon2}_{lat2}_{speed}_{band_distance}.png")
         
         # Export the route segment to a PNG image
         title = f"Lawn Mowing Route (Speed: {speed} m/s, Band Distance: {band_distance} m)"

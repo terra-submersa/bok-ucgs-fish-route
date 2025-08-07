@@ -13,4 +13,13 @@
   * The route is delimited by the 4 corners of the rectangle.
   * it must fly on parallel bands.
   * The distance between two band is at maximum distance given (or the highest one dividing the rectangle, but lower than the given).
-* [ ] change the flask command line app generate-perimeter-map to generate-lawn-mowing, with a extra parameter for the distance between two bands. 
+* [x] change the flask command line app generate-perimeter-map to generate-lawn-mowing, with a extra parameter for the distance between two bands.
+* [x] add an angle in degree for lawn mowing. 0 is South -> North, 90 is East -> West.
+* [ ] BUG: lawn mowing with an angle:
+  * the lines must be paralel to the angle.
+  * the waypoints must be on rectangle perimeter
+![img.png](img.png)
+* [ ] BUG: You must cover the rectngle with lines at the specific angle
+![img_1.png](img_1.png)
+![img_2.png](img_2.png)
+  *

@@ -72,11 +72,12 @@ def generate_perimeter_map(lat1, lon1, lat2, lon2, speed, epsg, output):
 @click.argument("lon2", type=float)
 @click.argument("speed", type=float)
 @click.argument("band_distance", type=float)
+@click.option("--angle", type=float, default=0.0, help="Angle in degrees for lawn mowing direction. 0 is South->North, 90 is East->West (default: 0.0)")
 @click.option("--epsg", type=int, default=3857, help="EPSG code for the map projection (default: 3857)")
 @click.option("--output", type=str, help="Output file path (optional)")
-def generate_lawn_mowing(lat1, lon1, lat2, lon2, speed, band_distance, epsg, output):
+def generate_lawn_mowing(lat1, lon1, lat2, lon2, speed, band_distance, angle, epsg, output):
     """
-    Generate a lawn mowing pattern route map from two corner coordinates, a speed, and band distance.
+    Generate a lawn mowing pattern route map from two corner coordinates, a speed, band distance, and optional angle.
     
     Arguments:
     LAT1: Latitude of the first corner in WGS84
@@ -86,8 +87,12 @@ def generate_lawn_mowing(lat1, lon1, lat2, lon2, speed, band_distance, epsg, out
     SPEED: Speed in meters per second
     BAND_DISTANCE: Maximum distance between two bands in meters
     
+    Options:
+    --angle: Angle in degrees for lawn mowing direction. 0 is South->North, 90 is East->West (default: 0.0)
+    
     Example:
-        flask generate-lawn-mowning 37.428 23.134 37.430 23.136 2.5 10.0
+        flask generate-lawn-mowing 37.428 23.134 37.430 23.136 2.5 10.0
+        flask generate-lawn-mowing 37.428 23.134 37.430 23.136 2.5 10.0 --angle 45.0
     """
     try:
         # Create the lawn mower route segment
@@ -97,7 +102,8 @@ def generate_lawn_mowing(lat1, lon1, lat2, lon2, speed, band_distance, epsg, out
             corner1, 
             corner2, 
             speed, 
-            band_distance, 
+            band_distance,
+            angle,
             f"EPSG:{epsg}"
         )
         

@@ -24,7 +24,9 @@
 ![img_1.png](img_1.png)
 * [x] I see that you deal with coordinates setting latiude first and longitude second. In fact, you must refactor the code to stick to the standard x,y, which means longitude, latitude. Refactor all function call and return pairs to adapt to this standard.
 * [x] in `coordinates.route.py` I want a function generating a `RouteSegment`, given a list of (float, float), an altitude and a speed
-* [ ] In `route_planner` the function creating a RouteSegment
+* [x] In `route_planner` the function creating a RouteSegment
   * shall not have a `speed` parameter.
   * shall return a list of (float, float).
   * Where those function are called, we should invoke `create_route_segment_from_coordinates` with altitude and speed to create the final `RouteSegment`.
+* [x] route_planner, assume that the function creating list of coordinates (create_route_segment_lawn_mower and create_route_segment_perimeter) are given  coordinates in UTM coordinates (with metrics cartesian). As distance are small, we cann make this approximation
+  * for the flask script, detect is the given coordinates are with (-180/180 and -90/90). If yes, assume that they are in WGS84 and convert them to the appropriate coordinates (reporting so in a logging info statement)

@@ -1,0 +1,232 @@
+{
+  "version" : {
+    "major" : 5,
+    "minor" : 12,
+    "patch" : 0,
+    "build" : "8178",
+    "component" : "DATABASE"
+  },
+  "payloadProfiles" : [ ],
+  "vehicleProfiles" : [ {
+    "name" : "DJI Matrice 350 RTK",
+    "code" : null,
+    "vehicleType" : "MULTICOPTER",
+    "modelKey" : "dji_matrice_300",
+    "imageKey" : "dji_matrice_300",
+    "platformCode" : "DjiMatrice350RTK",
+    "primary" : true,
+    "payloadProfiles" : [ ],
+    "parameters" : {
+      "height" : 0.43,
+      "width" : 0.67,
+      "length" : 0.81,
+      "maxClimbRate" : 6.0,
+      "maxHorizontalSpeed" : 15.0,
+      "maxAltitude" : 5000.0,
+      "maxWaypoints" : 65535.0,
+      "maxFlightTime" : 3300.0,
+      "windResistance" : 12.0,
+      "dryTakeoffWeight" : 6.47,
+      "maxTakeoffWeight" : 9.2,
+      "batteryWeight" : 1.35,
+      "chargedBatteryVoltage" : null,
+      "dischargedBatteryVoltage" : null,
+      "normalBatteryVoltage" : null,
+      "lowBatteryVoltage" : null,
+      "lowGpsSatellites" : 7.0,
+      "normalGpsSatellites" : 9.0,
+      "safeDistanceToTerrain" : 2.0,
+      "safeDistanceToObstacle" : 20.0,
+      "waypointAcceptanceRadius" : 4.0,
+      "fenceRadius" : 2500.0,
+      "fenceAltitude" : 150.0,
+      "lowTelemetryLevel" : 50.0,
+      "normalTelemetryLevel" : 70.0,
+      "defaultClimbRate" : 2.0,
+      "defaultDescentRate" : 1.0,
+      "glideSlope" : null,
+      "defaultHorizontalSpeed" : 5.0,
+      "landingGroundSpeed" : null,
+      "maxAltitudeAgl" : 1500.0,
+      "landingFlareAltitude" : null,
+      "landingFlareTime" : null,
+      "minLandingPitch" : null,
+      "landingFlareDamp" : null,
+      "landingApproachAirspeed" : null,
+      "landingSpeedWeighting" : null,
+      "maxAutoFlightPitch" : null,
+      "maxPitch" : null,
+      "minThrottle" : null,
+      "landingSinkRate" : null,
+      "landingRangefinderEnabled" : null,
+      "minRangefinderDistance" : null,
+      "maxDescentRate" : 5.0,
+      "lowBatteryPowerLevel" : null,
+      "normalBatteryPowerLevel" : null,
+      "maxRangefinderDistance" : 30.0,
+      "minDistanceBetweenWaypoint" : 1.0,
+      "initialSpeed" : 5.0,
+      "waypointMaxWaitTime" : 25.5,
+      "cornerRadius" : 20.0
+    }
+  } ],
+  "route" : {
+    "name" : "Route 3",
+    "creationTime" : 1754505904163,
+    "scheduledTime" : null,
+    "startDelay" : null,
+    "vehicleProfile" : "DJI Matrice 350 RTK",
+    "trajectoryType" : null,
+    "safeAltitude" : 20.0,
+    "maxAltitude" : 1500.0,
+    "initialSpeed" : 5.0,
+    "maxSpeed" : null,
+    "failsafes" : {
+      "rcLost" : "GO_HOME",
+      "gpsLost" : null,
+      "lowBattery" : null,
+      "datalinkLost" : null
+    },
+    "checkAerodromeNfz" : false,
+    "checkCustomNfz" : false,
+    "segments" : [ {
+      "type" : "Waypoint",
+      "actions" : [ ],
+      "point" : {
+        "latitude" : 0.6532520205640555,
+        "longitude" : 0.4037727379307849,
+        "altitude" : 15.0,
+        "altitudeType" : "AGL"
+      },
+      "parameters" : {
+        "avoidObstacles" : true,
+        "avoidTerrain" : true,
+        "speed" : 3.0,
+        "wpTurnType" : "STRAIGHT",
+        "altitudeType" : "AGL",
+        "cornerRadius" : null
+      }
+    }, {
+      "type" : "Waypoint",
+      "actions" : [ ],
+      "point" : {
+        "latitude" : 0.6532519242728632,
+        "longitude" : 0.4037756640451235,
+        "altitude" : 3.0,
+        "altitudeType" : "AGL"
+      },
+      "parameters" : {
+        "avoidObstacles" : true,
+        "avoidTerrain" : true,
+        "speed" : 3.0,
+        "wpTurnType" : "STRAIGHT",
+        "altitudeType" : "AGL",
+        "cornerRadius" : null
+      }
+    }, {
+      "type" : "Waypoint",
+      "actions" : [ ],
+      "point" : {
+        "latitude" : 0.653250655261461,
+        "longitude" : 0.40377584738977196,
+        "altitude" : 3.0,
+        "altitudeType" : "AGL"
+      },
+      "parameters" : {
+        "avoidObstacles" : true,
+        "avoidTerrain" : true,
+        "speed" : 3.0,
+        "wpTurnType" : "STRAIGHT",
+        "altitudeType" : "AGL",
+        "cornerRadius" : null
+      }
+    }, {
+      "type" : "Waypoint",
+      "actions" : [ ],
+      "point" : {
+        "latitude" : 0.6532505680722323,
+        "longitude" : 0.4037747146391812,
+        "altitude" : 3.0,
+        "altitudeType" : "AGL"
+      },
+      "parameters" : {
+        "avoidObstacles" : true,
+        "avoidTerrain" : true,
+        "speed" : 3.0,
+        "wpTurnType" : "STRAIGHT",
+        "altitudeType" : "AGL",
+        "cornerRadius" : null
+      }
+    }, {
+      "type" : "Waypoint",
+      "actions" : [ ],
+      "point" : {
+        "latitude" : 0.6532495548942769,
+        "longitude" : 0.4037746218661384,
+        "altitude" : 3.0,
+        "altitudeType" : "AGL"
+      },
+      "parameters" : {
+        "avoidObstacles" : true,
+        "avoidTerrain" : true,
+        "speed" : 3.0,
+        "wpTurnType" : "STRAIGHT",
+        "altitudeType" : "AGL",
+        "cornerRadius" : null
+      }
+    }, {
+      "type" : "Waypoint",
+      "actions" : [ ],
+      "point" : {
+        "latitude" : 0.6532496818609057,
+        "longitude" : 0.403773534435161,
+        "altitude" : 3.0,
+        "altitudeType" : "AGL"
+      },
+      "parameters" : {
+        "avoidObstacles" : true,
+        "avoidTerrain" : true,
+        "speed" : 3.0,
+        "wpTurnType" : "STRAIGHT",
+        "altitudeType" : "AGL",
+        "cornerRadius" : null
+      }
+    }, {
+      "type" : "Waypoint",
+      "actions" : [ ],
+      "point" : {
+        "latitude" : 0.653250793560721,
+        "longitude" : 0.40377285837595445,
+        "altitude" : 3.0,
+        "altitudeType" : "AGL"
+      },
+      "parameters" : {
+        "avoidObstacles" : true,
+        "avoidTerrain" : true,
+        "speed" : 3.0,
+        "wpTurnType" : "STRAIGHT",
+        "altitudeType" : "AGL",
+        "cornerRadius" : null
+      }
+    }, {
+      "type" : "Waypoint",
+      "actions" : [ ],
+      "point" : {
+        "latitude" : 0.6532509214177513,
+        "longitude" : 0.40377299924719723,
+        "altitude" : 15.0,
+        "altitudeType" : "AGL"
+      },
+      "parameters" : {
+        "avoidObstacles" : true,
+        "avoidTerrain" : true,
+        "speed" : 3.0,
+        "wpTurnType" : "STRAIGHT",
+        "altitudeType" : "AGL",
+        "cornerRadius" : null
+      }
+    } ],
+    "takeoffHeight" : null,
+    "cornerRadius" : 20.0
+  }
+}

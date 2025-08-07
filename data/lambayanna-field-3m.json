@@ -1,0 +1,149 @@
+{
+  "version" : {
+    "major" : 5,
+    "minor" : 12,
+    "patch" : 0,
+    "build" : "8178",
+    "component" : "DATABASE"
+  },
+  "payloadProfiles" : [ ],
+  "vehicleProfiles" : [ {
+    "name" : "DJI Matrice 350 RTK",
+    "code" : null,
+    "vehicleType" : "MULTICOPTER",
+    "modelKey" : "dji_matrice_300",
+    "imageKey" : "dji_matrice_300",
+    "platformCode" : "DjiMatrice350RTK",
+    "primary" : true,
+    "payloadProfiles" : [ ],
+    "parameters" : {
+      "height" : 0.43,
+      "width" : 0.67,
+      "length" : 0.81,
+      "maxClimbRate" : 6.0,
+      "maxHorizontalSpeed" : 15.0,
+      "maxAltitude" : 5000.0,
+      "maxWaypoints" : 65535.0,
+      "maxFlightTime" : 3300.0,
+      "windResistance" : 12.0,
+      "dryTakeoffWeight" : 6.47,
+      "maxTakeoffWeight" : 9.2,
+      "batteryWeight" : 1.35,
+      "chargedBatteryVoltage" : null,
+      "dischargedBatteryVoltage" : null,
+      "normalBatteryVoltage" : null,
+      "lowBatteryVoltage" : null,
+      "lowGpsSatellites" : 7.0,
+      "normalGpsSatellites" : 9.0,
+      "safeDistanceToTerrain" : 2.0,
+      "safeDistanceToObstacle" : 20.0,
+      "waypointAcceptanceRadius" : 4.0,
+      "fenceRadius" : 2500.0,
+      "fenceAltitude" : 150.0,
+      "lowTelemetryLevel" : 50.0,
+      "normalTelemetryLevel" : 70.0,
+      "defaultClimbRate" : 2.0,
+      "defaultDescentRate" : 1.0,
+      "glideSlope" : null,
+      "defaultHorizontalSpeed" : 5.0,
+      "landingGroundSpeed" : null,
+      "maxAltitudeAgl" : 1500.0,
+      "landingFlareAltitude" : null,
+      "landingFlareTime" : null,
+      "minLandingPitch" : null,
+      "landingFlareDamp" : null,
+      "landingApproachAirspeed" : null,
+      "landingSpeedWeighting" : null,
+      "maxAutoFlightPitch" : null,
+      "maxPitch" : null,
+      "minThrottle" : null,
+      "landingSinkRate" : null,
+      "landingRangefinderEnabled" : null,
+      "minRangefinderDistance" : null,
+      "maxDescentRate" : 5.0,
+      "lowBatteryPowerLevel" : null,
+      "normalBatteryPowerLevel" : null,
+      "maxRangefinderDistance" : 30.0,
+      "minDistanceBetweenWaypoint" : 1.0,
+      "initialSpeed" : 5.0,
+      "waypointMaxWaitTime" : 25.5,
+      "cornerRadius" : 20.0
+    }
+  } ],
+  "route" : {
+    "name" : "lambayanna-field-3m",
+    "creationTime" : 1754229735542,
+    "scheduledTime" : null,
+    "startDelay" : null,
+    "vehicleProfile" : "DJI Matrice 350 RTK",
+    "trajectoryType" : null,
+    "safeAltitude" : 3.5,
+    "maxAltitude" : 1500.0,
+    "initialSpeed" : 3.0,
+    "maxSpeed" : 0.0,
+    "failsafes" : {
+      "rcLost" : "GO_HOME",
+      "gpsLost" : null,
+      "lowBattery" : null,
+      "datalinkLost" : null
+    },
+    "checkAerodromeNfz" : false,
+    "checkCustomNfz" : false,
+    "segments" : [ {
+      "type" : "AreaScan",
+      "actions" : [ ],
+      "polygon" : {
+        "points" : [ {
+          "latitude" : 0.653252263491324,
+          "longitude" : 0.4037758751488622,
+          "altitude" : 0.0,
+          "altitudeType" : "AGL"
+        }, {
+          "latitude" : 0.6532498303704477,
+          "longitude" : 0.40377652421313837,
+          "altitude" : 0.0,
+          "altitudeType" : "AGL"
+        }, {
+          "latitude" : 0.6532494891468721,
+          "longitude" : 0.403775211400096,
+          "altitude" : 0.0,
+          "altitudeType" : "AGL"
+        }, {
+          "latitude" : 0.6532487773328084,
+          "longitude" : 0.40377286766763587,
+          "altitude" : 0.0,
+          "altitudeType" : "AGL"
+        }, {
+          "latitude" : 0.6532518624955372,
+          "longitude" : 0.40377213871086326,
+          "altitude" : 0.0,
+          "altitudeType" : "AGL"
+        }, {
+          "latitude" : 0.653252263491324,
+          "longitude" : 0.4037758751488622,
+          "altitude" : 0.0,
+          "altitudeType" : "AGL"
+        } ]
+      },
+      "parameters" : {
+        "speed" : 2.0,
+        "wpTurnType" : "STRAIGHT",
+        "height" : 3.0,
+        "altitudeType" : "AGL",
+        "sideDistance" : 3.0,
+        "directionAngle" : 0.0,
+        "avoidObstacles" : true,
+        "actionExecution" : "ACTIONS_EVERY_POINT",
+        "overshoot" : null,
+        "overshootSpeed" : null,
+        "areaScanAllowPartialCalculation" : false,
+        "tolerance" : 0.2,
+        "minGap" : null,
+        "maxSlope" : null,
+        "doubleGrid" : false
+      }
+    } ],
+    "takeoffHeight" : 0.0,
+    "cornerRadius" : 3.0
+  }
+}

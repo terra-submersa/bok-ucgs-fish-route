@@ -1,7 +1,7 @@
 import pytest
 
 from bok_ucgs_fish_route.coordinates.waypoint import WaypointCoordinate
-from bok_ucgs_fish_route.coordinates.route import RouteSegment
+from bok_ucgs_fish_route.coordinates.route import RouteSegment, create_route_segment_from_coordinates
 
 
 @pytest.fixture
@@ -88,3 +88,51 @@ def test_route_segment_repr(sample_waypoints):
     
     for waypoint in sample_waypoints:
         assert str(waypoint) in repr_str
+
+
+@pytest.fixture
+def sample_coordinates():
+    """Fixture providing a list of sample coordinate tuples for testing."""
+    return [
+        (23.1344738, 37.4285837),  # (lon, lat) format
+        (23.1345000, 37.4286000),
+        (23.1346000, 37.4286500),
+    ]
+
+
+@pytest.mark.parametrize("altitude, speed", [
+    (0.0, 1.0),
+    (10.5, 2.5),
+    (-5.0, 10.0),
+])
+def test_create_route_segment_from_coordinates(sample_coordinates, altitude, speed):
+    """
+    Test that create_route_segment_from_coordinates correctly creates a route segment
+    with the specified coordinates, altitude, and speed.
+    """
+    route_segment = create_route_segment_from_coordinates(sample_coordinates, altitude, speed)
+    
+    # Check that the route segment has the correct speed
+    assert route_segment.speed == speed
+    
+    # Check that the correct number of waypoints were created
+    assert len(route_segment.waypoints) == len(sample_coordinates)
+    
+    # Check that each waypoint has the correct coordinates and altitude
+    for i, (lon, lat) in enumerate(sample_coordinates):
+        waypoint = route_segment.waypoints[i]
+        assert waypoint.lon == lon
+        assert waypoint.lat == lat
+        assert waypoint.altitude == altitude
+
+
+def test_create_route_segment_from_coordinates_empty_list():
+    """Test that create_route_segment_from_coordinates raises ValueError when given an empty list."""
+    with pytest.raises(ValueError, match="Coordinates list must not be empty"):
+        create_route_segment_from_coordinates([], 0.0, 1.0)
+
+
+def test_create_route_segment_from_coordinates_invalid_speed():
+    """Test that create_route_segment_from_coordinates raises ValueError when given a non-positive speed."""
+    with pytest.raises(ValueError, match="Speed must be positive"):
+        create_route_segment_from_coordinates([(23.1344738, 37.4285837)], 0.0, 0.0)

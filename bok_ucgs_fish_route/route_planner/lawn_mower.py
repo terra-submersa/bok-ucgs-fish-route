@@ -1,40 +1,35 @@
 import math
 from typing import Tuple, List
 
-from bok_ucgs_fish_route.coordinates.route import RouteSegment
-from bok_ucgs_fish_route.coordinates.waypoint import WaypointCoordinate
-
 
 def create_route_segment_lawn_mower(
     corner1: Tuple[float, float],
     corner2: Tuple[float, float],
-    speed: float,
     band_distance: float,
     angle: float = 0.0,
     epsg_code: str = "EPSG:4326"  # Default to WGS84
-) -> RouteSegment:
+) -> List[Tuple[float, float]]:
     """
-    Create a RouteSegment with a lawn mower pattern within a rectangle.
+    Create a list of coordinates with a lawn mower pattern within a rectangle.
 
-    The function takes two corners of a rectangle and creates a route segment
+    The function takes two corners of a rectangle and creates a list of coordinates
     that traverses the rectangle in parallel bands (lawn mower pattern).
 
     Args:
         corner1 (Tuple[float, float]): First corner coordinates as (longitude, latitude)
         corner2 (Tuple[float, float]): Second corner coordinates as (longitude, latitude)
-        speed (float): Speed in meters per second
         band_distance (float): Maximum distance between parallel bands in meters
         angle (float, optional): Angle in degrees for lawn mowing direction. 0 is South->North, 90 is East->West. Defaults to 0.0.
         epsg_code (str, optional): EPSG code for the coordinate reference system. Defaults to "EPSG:4326" (WGS84).
 
     Returns:
-        RouteSegment: A route segment with a lawn mower pattern within the rectangle
+        List[Tuple[float, float]]: A list of coordinate tuples (longitude, latitude) with a lawn mower pattern within the rectangle
 
     Example:
         >>> corner1 = (23.134, 37.428)  # (lon, lat)
         >>> corner2 = (23.136, 37.430)  # (lon, lat)
-        >>> segment = create_route_segment_lawn_mower(corner1, corner2, 2.5, 10.0)
-        >>> segment_angled = create_route_segment_lawn_mower(corner1, corner2, 2.5, 10.0, 45.0)
+        >>> coordinates = create_route_segment_lawn_mower(corner1, corner2, 10.0)
+        >>> coordinates_angled = create_route_segment_lawn_mower(corner1, corner2, 10.0, 45.0)
     """
     # Extract coordinates
     lon1, lat1 = corner1
@@ -61,19 +56,19 @@ def create_route_segment_lawn_mower(
     # For standard angles (0, 90, 180), use the optimized approach
     if normalized_angle == 0 or normalized_angle == 180:
         return _create_vertical_lawn_mower(lat_min, lat_max, lon_min, lon_max, 
-                                          band_distance, lon_meters_per_degree, speed)
+                                          band_distance, lon_meters_per_degree)
     elif normalized_angle == 90:
         return _create_horizontal_lawn_mower(lat_min, lat_max, lon_min, lon_max, 
-                                            band_distance, lat_meters_per_degree, speed)
+                                            band_distance, lat_meters_per_degree)
     else:
         # For angled lawn mowing, use the new approach
         return _create_angled_lawn_mower(lat_min, lat_max, lon_min, lon_max, 
                                         band_distance, normalized_angle, 
-                                        lat_meters_per_degree, lon_meters_per_degree, speed)
+                                        lat_meters_per_degree, lon_meters_per_degree)
 
 
 def _create_vertical_lawn_mower(lat_min: float, lat_max: float, lon_min: float, lon_max: float, 
-                               band_distance: float, lon_meters_per_degree: float, speed: float) -> RouteSegment:
+                               band_distance: float, lon_meters_per_degree: float) -> List[Tuple[float, float]]:
     """
     Create a lawn mower pattern with vertical bands (north-south).
     
@@ -84,10 +79,9 @@ def _create_vertical_lawn_mower(lat_min: float, lat_max: float, lon_min: float, 
         lon_max: Maximum longitude of the rectangle
         band_distance: Maximum distance between bands in meters
         lon_meters_per_degree: Conversion factor from degrees to meters for longitude
-        speed: Speed in meters per second
         
     Returns:
-        RouteSegment with vertical lawn mower pattern
+        List[Tuple[float, float]]: List of coordinate tuples (longitude, latitude) with vertical lawn mower pattern
     """
     # Calculate the width in meters
     width_deg = lon_max - lon_min
@@ -106,25 +100,25 @@ def _create_vertical_lawn_mower(lat_min: float, lat_max: float, lon_min: float, 
         num_bands += 1
         actual_band_distance_deg = width_deg / (num_bands - 1)
 
-    # Create waypoints for vertical bands
-    waypoints = []
+    # Create coordinates for vertical bands
+    coordinates = []
     for i in range(num_bands):
         lon = lon_min + i * actual_band_distance_deg
 
         # For even-indexed bands, go from south to north
         if i % 2 == 0:
-            waypoints.append(WaypointCoordinate(lon, lat_min))
-            waypoints.append(WaypointCoordinate(lon, lat_max))
+            coordinates.append((lon, lat_min))
+            coordinates.append((lon, lat_max))
         # For odd-indexed bands, go from north to south
         else:
-            waypoints.append(WaypointCoordinate(lon, lat_max))
-            waypoints.append(WaypointCoordinate(lon, lat_min))
+            coordinates.append((lon, lat_max))
+            coordinates.append((lon, lat_min))
             
-    return RouteSegment(waypoints, speed)
+    return coordinates
 
 
 def _create_horizontal_lawn_mower(lat_min: float, lat_max: float, lon_min: float, lon_max: float, 
-                                 band_distance: float, lat_meters_per_degree: float, speed: float) -> RouteSegment:
+                                 band_distance: float, lat_meters_per_degree: float) -> List[Tuple[float, float]]:
     """
     Create a lawn mower pattern with horizontal bands (east-west).
     
@@ -135,10 +129,9 @@ def _create_horizontal_lawn_mower(lat_min: float, lat_max: float, lon_min: float
         lon_max: Maximum longitude of the rectangle
         band_distance: Maximum distance between bands in meters
         lat_meters_per_degree: Conversion factor from degrees to meters for latitude
-        speed: Speed in meters per second
         
     Returns:
-        RouteSegment with horizontal lawn mower pattern
+        List[Tuple[float, float]]: List of coordinate tuples (longitude, latitude) with horizontal lawn mower pattern
     """
     # Calculate the height in meters
     height_deg = lat_max - lat_min
@@ -157,27 +150,26 @@ def _create_horizontal_lawn_mower(lat_min: float, lat_max: float, lon_min: float
         num_bands += 1
         actual_band_distance_deg = height_deg / (num_bands - 1)
 
-    # Create waypoints for horizontal bands
-    waypoints = []
+    # Create coordinates for horizontal bands
+    coordinates = []
     for i in range(num_bands):
         lat = lat_min + i * actual_band_distance_deg
 
         # For even-indexed bands, go from west to east
         if i % 2 == 0:
-            waypoints.append(WaypointCoordinate(lon_min, lat))
-            waypoints.append(WaypointCoordinate(lon_max, lat))
+            coordinates.append((lon_min, lat))
+            coordinates.append((lon_max, lat))
         # For odd-indexed bands, go from east to west
         else:
-            waypoints.append(WaypointCoordinate(lon_max, lat))
-            waypoints.append(WaypointCoordinate(lon_min, lat))
+            coordinates.append((lon_max, lat))
+            coordinates.append((lon_min, lat))
             
-    return RouteSegment(waypoints, speed)
+    return coordinates
 
 
 def _create_angled_lawn_mower(lat_min: float, lat_max: float, lon_min: float, lon_max: float, 
                              band_distance: float, angle: float, 
-                             lat_meters_per_degree: float, lon_meters_per_degree: float, 
-                             speed: float) -> RouteSegment:
+                             lat_meters_per_degree: float, lon_meters_per_degree: float) -> List[Tuple[float, float]]:
     """
     Create a lawn mower pattern with bands at the specified angle.
     
@@ -190,10 +182,9 @@ def _create_angled_lawn_mower(lat_min: float, lat_max: float, lon_min: float, lo
         angle: Angle in degrees (0-180)
         lat_meters_per_degree: Conversion factor from degrees to meters for latitude
         lon_meters_per_degree: Conversion factor from degrees to meters for longitude
-        speed: Speed in meters per second
         
     Returns:
-        RouteSegment with angled lawn mower pattern
+        List[Tuple[float, float]]: List of coordinate tuples (longitude, latitude) with angled lawn mower pattern
     """
     # Define the rectangle corners in clockwise order
     corners = [
@@ -202,6 +193,9 @@ def _create_angled_lawn_mower(lat_min: float, lat_max: float, lon_min: float, lo
         (lat_max, lon_max),  # Top-right
         (lat_max, lon_min),  # Top-left
     ]
+    
+    # Initialize the list of coordinates
+    coordinates = []
     
     # Calculate the center of the rectangle
     center_lat = (lat_min + lat_max) / 2
@@ -234,7 +228,8 @@ def _create_angled_lawn_mower(lat_min: float, lat_max: float, lon_min: float, lo
     actual_band_distance = projection_length / (num_bands - 1) if num_bands > 1 else projection_length
     
     # Calculate the start and end points for each band
-    waypoints = []
+    # Initialize the list of coordinates (already done above)
+    # coordinates = []
     
     # Calculate the starting position for the first band
     # We start from the furthest point in the negative direction perpendicular to the bands
@@ -361,8 +356,8 @@ def _create_angled_lawn_mower(lat_min: float, lat_max: float, lon_min: float, lo
             # Add the intersections to the list of all intersections
             all_intersections.extend(band_intersections)
             
-            # Add the waypoints
-            waypoints.append(WaypointCoordinate(band_intersections[0][1], band_intersections[0][0]))
-            waypoints.append(WaypointCoordinate(band_intersections[1][1], band_intersections[1][0]))
+            # Add the coordinates
+            coordinates.append((band_intersections[0][1], band_intersections[0][0]))
+            coordinates.append((band_intersections[1][1], band_intersections[1][0]))
     
-    return RouteSegment(waypoints, speed)
+    return coordinates

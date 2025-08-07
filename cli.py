@@ -8,6 +8,7 @@ import click
 
 from bok_ucgs_fish_route.route_planner.perimeter import create_route_segment_perimeter
 from bok_ucgs_fish_route.route_planner.lawn_mower import create_route_segment_lawn_mower
+from bok_ucgs_fish_route.coordinates.route import create_route_segment_from_coordinates
 from bok_ucgs_fish_route.exporter.map_exporter import export_route_segment_to_png
 
 app = Flask(__name__)
@@ -35,10 +36,14 @@ def generate_perimeter_map(lon1, lat1, lon2, lat2, speed, epsg, output):
         flask generate-perimeter-map 23.134 37.428 23.136 37.430 2.5
     """
     try:
-        # Create the perimeter route segment
+        # Create the perimeter coordinates
         corner1 = (lon1, lat1)
         corner2 = (lon2, lat2)
-        route_segment = create_route_segment_perimeter(corner1, corner2, speed)
+        coordinates = create_route_segment_perimeter(corner1, corner2)
+        
+        # Create the route segment from coordinates
+        altitude = 0.0  # Default altitude
+        route_segment = create_route_segment_from_coordinates(coordinates, altitude, speed)
         
         # Determine output path
         if output:
@@ -95,17 +100,20 @@ def generate_lawn_mowing(lon1, lat1, lon2, lat2, speed, band_distance, angle, ep
         flask generate-lawn-mowing 23.134 37.428 23.136 37.430 2.5 10.0 --angle 45.0
     """
     try:
-        # Create the lawn mower route segment
+        # Create the lawn mower coordinates
         corner1 = (lon1, lat1)
         corner2 = (lon2, lat2)
-        route_segment = create_route_segment_lawn_mower(
+        coordinates = create_route_segment_lawn_mower(
             corner1, 
             corner2, 
-            speed, 
             band_distance,
             angle,
             f"EPSG:{epsg}"
         )
+        
+        # Create the route segment from coordinates
+        altitude = 0.0  # Default altitude
+        route_segment = create_route_segment_from_coordinates(coordinates, altitude, speed)
         
         # Determine output path
         if output:

@@ -2,7 +2,7 @@ import math
 
 import pytest
 
-from bok_ucgs_fish_route.coordinates.route import RouteSegment
+from bok_ucgs_fish_route.coordinates.route import RouteSegment, create_route_segment_from_coordinates
 from bok_ucgs_fish_route.route_planner import create_route_segment_lawn_mower
 
 
@@ -58,8 +58,12 @@ def test_create_route_segment_lawn_mower(corner1, corner2, speed, band_distance,
     Test that create_route_segment_lawn_mower correctly creates a route segment
     with a lawn mower pattern within the rectangle.
     """
-    # Create the route segment
-    route_segment = create_route_segment_lawn_mower(corner1, corner2, speed, band_distance, angle)
+    # Create the coordinates
+    coordinates = create_route_segment_lawn_mower(corner1, corner2, band_distance, angle)
+    
+    # Create the route segment from coordinates
+    altitude = 0.0  # Default altitude
+    route_segment = create_route_segment_from_coordinates(coordinates, altitude, speed)
 
     # Verify it's a RouteSegment instance
     assert isinstance(route_segment, RouteSegment)
@@ -116,7 +120,10 @@ def test_lawn_mower_band_distance(angle):
     corner1 = (23.134, 37.428)
     corner2 = (23.136, 37.430)
     band_distance = 50.0  # meters
-    route_segment = create_route_segment_lawn_mower(corner1, corner2, 2.5, band_distance, angle)
+    speed = 2.5
+    coordinates = create_route_segment_lawn_mower(corner1, corner2, band_distance, angle)
+    altitude = 0.0  # Default altitude
+    route_segment = create_route_segment_from_coordinates(coordinates, altitude, speed)
 
     # Extract waypoints
     waypoints = route_segment.waypoints
@@ -158,8 +165,11 @@ def test_lawn_mower_rotated_bands():
     corner2 = (23.136, 37.430)
     band_distance = 50.0  # meters
     angle = 45.0  # degrees
+    speed = 2.5
     
-    route_segment = create_route_segment_lawn_mower(corner1, corner2, 2.5, band_distance, angle)
+    coordinates = create_route_segment_lawn_mower(corner1, corner2, band_distance, angle)
+    altitude = 0.0  # Default altitude
+    route_segment = create_route_segment_from_coordinates(coordinates, altitude, speed)
     
     # Extract waypoints
     waypoints = route_segment.waypoints
@@ -200,8 +210,11 @@ def test_angled_lawn_mower_waypoints_on_perimeter():
     corner2 = (23.136, 37.430)
     band_distance = 50.0  # meters
     angle = 45.0  # degrees
+    speed = 2.5
     
-    route_segment = create_route_segment_lawn_mower(corner1, corner2, 2.5, band_distance, angle)
+    coordinates = create_route_segment_lawn_mower(corner1, corner2, band_distance, angle)
+    altitude = 0.0  # Default altitude
+    route_segment = create_route_segment_from_coordinates(coordinates, altitude, speed)
     
     # Extract waypoints and rectangle bounds
     waypoints = route_segment.waypoints

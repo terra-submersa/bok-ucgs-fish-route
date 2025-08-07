@@ -23,3 +23,8 @@
 * [X] BUG: You must cover the rectngle with lines at the specific angle
 ![img_1.png](img_1.png)
 * [x] I see that you deal with coordinates setting latiude first and longitude second. In fact, you must refactor the code to stick to the standard x,y, which means longitude, latitude. Refactor all function call and return pairs to adapt to this standard.
+* [x] in `coordinates.route.py` I want a function generating a `RouteSegment`, given a list of (float, float), an altitude and a speed
+* [ ] In `route_planner` the function creating a RouteSegment
+  * shall not have a `speed` parameter.
+  * shall return a list of (float, float).
+  * Where those function are called, we should invoke `create_route_segment_from_coordinates` with altitude and speed to create the final `RouteSegment`.

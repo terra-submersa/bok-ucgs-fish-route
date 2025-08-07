@@ -13,6 +13,7 @@
 * do not make function above 20 lines. Generate intermediary functions when it make sense.
 * refactor the code to use these functions
 
-## Specific projject instructions
+## Specific project instructions
 * when you deal with coordinates, stick to the x,y standard. (longitude, latitude)
-* When you return just a pair of value for coordinates, or pass to a function, use a Tuple[float, float] 
+* When you return just a pair of value for coordinates, or pass to a function, use a Tuple[float, float]
+* by default, use pyproj function to make computation with coordinates (distance, geod.fwd to move in a direction etc.)

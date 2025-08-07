@@ -1,33 +1,28 @@
-from typing import Tuple
-
-from bok_ucgs_fish_route.coordinates.waypoint import WaypointCoordinate
-from bok_ucgs_fish_route.coordinates.route import RouteSegment
+from typing import Tuple, List
 
 
 def create_route_segment_perimeter(
     corner1: Tuple[float, float],
-    corner2: Tuple[float, float],
-    speed: float
-) -> RouteSegment:
+    corner2: Tuple[float, float]
+) -> List[Tuple[float, float]]:
     """
-    Create a RouteSegment that passes through the 4 corners of a rectangle defined by two opposite corners.
+    Create a list of coordinates that passes through the 4 corners of a rectangle defined by two opposite corners.
     
     The function takes two corners of a rectangle in WGS coordinates (longitude, latitude) and creates
-    a route segment that traverses the perimeter of the rectangle in a clockwise direction starting
+    a list of coordinates that traverses the perimeter of the rectangle in a clockwise direction starting
     from the first corner.
     
     Args:
         corner1 (Tuple[float, float]): First corner coordinates as (longitude, latitude)
         corner2 (Tuple[float, float]): Second corner coordinates as (longitude, latitude)
-        speed (float): Speed in meters per second
         
     Returns:
-        RouteSegment: A route segment passing through all 4 corners of the rectangle
+        List[Tuple[float, float]]: A list of coordinate tuples (longitude, latitude) passing through all 4 corners of the rectangle
         
     Example:
         >>> corner1 = (23.134, 37.428)  # (lon, lat)
         >>> corner2 = (23.136, 37.430)  # (lon, lat)
-        >>> segment = create_route_segment_perimeter(corner1, corner2, 2.5)
+        >>> coordinates = create_route_segment_perimeter(corner1, corner2)
     """
     # Extract coordinates
     lon1, lat1 = corner1
@@ -43,12 +38,7 @@ def create_route_segment_perimeter(
         (lon1, lat1),  # Back to the starting point to complete the perimeter
     ]
     
-    # Create waypoints from the corner coordinates
-    waypoints = [
-        WaypointCoordinate(lon, lat) for lon, lat in corner_coordinates
-    ]
-    
-    # Create and return the route segment
-    return RouteSegment(waypoints, speed)
+    # Return the list of coordinate tuples
+    return corner_coordinates
 
 

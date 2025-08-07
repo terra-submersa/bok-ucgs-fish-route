@@ -13,7 +13,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from cli import app, generate_perimeter_map, generate_lawn_mowing
 from bok_ucgs_fish_route.coordinates.waypoint import WaypointCoordinate
-from bok_ucgs_fish_route.coordinates.route import RouteSegment
+from bok_ucgs_fish_route.coordinates.route import RouteSegment, create_route_segment_from_coordinates
 
 
 @pytest.fixture
@@ -52,19 +52,31 @@ class TestGeneratePerimeterMap:
             
             # Mock the create_route_segment_perimeter function
             with patch('cli.create_route_segment_perimeter') as mock_create:
-                # For valid speed, return a valid route segment
+                # For valid speed, return a valid list of coordinates
                 if speed > 0:
-                    waypoints = [
-                        WaypointCoordinate(lat1, lon1),
-                        WaypointCoordinate(lat1, lon2),
-                        WaypointCoordinate(lat2, lon2),
-                        WaypointCoordinate(lat2, lon1),
-                        WaypointCoordinate(lat1, lon1)
+                    coordinates = [
+                        (lon1, lat1),
+                        (lon2, lat1),
+                        (lon2, lat2),
+                        (lon1, lat2),
+                        (lon1, lat1)
                     ]
-                    mock_create.return_value = RouteSegment(waypoints, speed)
+                    mock_create.return_value = coordinates
                 else:
                     # For invalid speed, raise ValueError
                     mock_create.side_effect = ValueError("Speed must be positive")
+                    
+                # Also mock create_route_segment_from_coordinates
+                with patch('cli.create_route_segment_from_coordinates') as mock_create_from_coords:
+                    if speed > 0:
+                        waypoints = [
+                            WaypointCoordinate(lon=lon1, lat=lat1, altitude=0.0),
+                            WaypointCoordinate(lon=lon2, lat=lat1, altitude=0.0),
+                            WaypointCoordinate(lon=lon2, lat=lat2, altitude=0.0),
+                            WaypointCoordinate(lon=lon1, lat=lat2, altitude=0.0),
+                            WaypointCoordinate(lon=lon1, lat=lat1, altitude=0.0)
+                        ]
+                        mock_create_from_coords.return_value = RouteSegment(waypoints, speed)
                 
                 # Run the CLI command
                 args = [
@@ -109,22 +121,34 @@ class TestGenerateLawnMowning:
             
             # Mock the create_route_segment_lawn_mower function
             with patch('cli.create_route_segment_lawn_mower') as mock_create:
-                # For valid parameters, return a valid route segment
+                # For valid parameters, return a valid list of coordinates
                 if speed > 0 and band_distance > 0:
-                    waypoints = [
-                        WaypointCoordinate(lat1, lon1),
-                        WaypointCoordinate(lat1, lon2),
-                        WaypointCoordinate(lat2, lon2),
-                        WaypointCoordinate(lat2, lon1),
-                        WaypointCoordinate(lat1, lon1)
+                    coordinates = [
+                        (lon1, lat1),
+                        (lon2, lat1),
+                        (lon2, lat2),
+                        (lon1, lat2),
+                        (lon1, lat1)
                     ]
-                    mock_create.return_value = RouteSegment(waypoints, speed)
+                    mock_create.return_value = coordinates
                 else:
                     # For invalid parameters, raise ValueError
                     if speed <= 0:
                         mock_create.side_effect = ValueError("Speed must be positive")
                     else:
                         mock_create.side_effect = ValueError("Band distance must be positive")
+                        
+                # Also mock create_route_segment_from_coordinates
+                with patch('cli.create_route_segment_from_coordinates') as mock_create_from_coords:
+                    if speed > 0 and band_distance > 0:
+                        waypoints = [
+                            WaypointCoordinate(lon=lon1, lat=lat1, altitude=0.0),
+                            WaypointCoordinate(lon=lon2, lat=lat1, altitude=0.0),
+                            WaypointCoordinate(lon=lon2, lat=lat2, altitude=0.0),
+                            WaypointCoordinate(lon=lon1, lat=lat2, altitude=0.0),
+                            WaypointCoordinate(lon=lon1, lat=lat1, altitude=0.0)
+                        ]
+                        mock_create_from_coords.return_value = RouteSegment(waypoints, speed)
                 
                 # Run the CLI command
                 args = [

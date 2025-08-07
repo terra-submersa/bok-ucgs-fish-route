@@ -1,6 +1,34 @@
-from typing import List
+from typing import List, Tuple
 
 from bok_ucgs_fish_route.coordinates.waypoint import WaypointCoordinate
+
+
+def create_route_segment_from_coordinates(coordinates: List[Tuple[float, float]], altitude: float, speed: float) -> 'RouteSegment':
+    """
+    Create a RouteSegment from a list of coordinate tuples, an altitude, and a speed.
+    
+    Args:
+        coordinates (List[Tuple[float, float]]): List of coordinate tuples (longitude, latitude)
+        altitude (float): Altitude in meters to apply to all waypoints
+        speed (float): Speed in meters per second
+        
+    Returns:
+        RouteSegment: A route segment containing waypoints created from the coordinates
+        
+    Raises:
+        ValueError: If coordinates list is empty
+    """
+    if not coordinates:
+        raise ValueError("Coordinates list must not be empty")
+    
+    # Convert each coordinate tuple to a WaypointCoordinate
+    waypoints = [
+        WaypointCoordinate(lon=coord[0], lat=coord[1], altitude=altitude)
+        for coord in coordinates
+    ]
+    
+    # Create and return a RouteSegment
+    return RouteSegment(waypoints, speed)
 
 
 class RouteSegment:

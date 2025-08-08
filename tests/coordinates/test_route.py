@@ -82,7 +82,6 @@ def test_route_segment_repr(sample_waypoints):
     repr_str = repr(route_segment)
     
     # The string representation should contain all the values
-    assert "RouteSegment" in repr_str
     assert "waypoints=" in repr_str
     assert "speed=2.5" in repr_str
     

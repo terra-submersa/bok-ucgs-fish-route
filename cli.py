@@ -121,6 +121,7 @@ def generate_lawn_mowing(lon1, lat1, lon2, lat2, speed, band_distance, angle, ut
         # Create the route segment from coordinates
         altitude = 0.0  # Default altitude
         route_segment = create_route_segment_from_coordinates(coordinates, altitude, speed, utm_epsg)
+        print(route_segment)
         
         # Determine output path
         if output:
@@ -139,7 +140,7 @@ def generate_lawn_mowing(lon1, lat1, lon2, lat2, speed, band_distance, angle, ut
             title=title
         )
         
-        click.echo(f"Map generated and saved to: {output_path}")
+        click.echo(f"Map generated and saved to: {output_path} with {len(route_segment)} waypoints")
         return output_path
         
     except Exception as e:

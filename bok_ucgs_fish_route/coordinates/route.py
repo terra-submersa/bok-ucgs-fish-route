@@ -77,7 +77,10 @@ class RouteSegment:
 
     def __repr__(self):
         """Return string representation of the route segment."""
-        return f"RouteSegment(waypoints={self.waypoints}, speed={self.speed})"
+        buf = "waypoints=\n\t"
+        buf += '\n\t'.join(str(wp) for wp in self.waypoints)
+        buf += f"\nspeed={self.speed}"
+        return buf
 
     def __eq__(self, other):
         """Check if two route segments are equal."""

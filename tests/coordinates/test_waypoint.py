@@ -59,7 +59,7 @@ def test_waypoint_coordinate_equality():
 def test_waypoint_coordinate_repr():
     """Test the string representation of WaypointCoordinate."""
     waypoint = WaypointCoordinate(-74.0060, 40.7128, 10.0)
-    expected_repr = "WaypointCoordinate(lon=-74.006, lat=40.7128, altitude=10.0)"
+    expected_repr = "(x=-74.006000000000000, y=40.712800000000001, z=10.0)"
 
     # The string representation should contain all the values
     assert str(waypoint) == expected_repr

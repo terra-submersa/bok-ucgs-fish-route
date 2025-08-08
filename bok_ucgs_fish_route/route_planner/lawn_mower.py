@@ -45,118 +45,86 @@ def create_route_segment_lawn_mower(
     y_min, y_max = min(y1, y2), max(y1, y2)
 
     # Normalize angle to 0-180 range (since 180-360 would be the same pattern in reverse)
-    normalized_angle = angle % 180
+    normalized_angle = (90 - angle) % 180
 
     # For standard angles (0, 90, 180), use the optimized approach
-    if normalized_angle == 0 or normalized_angle == 180:
-        return _create_vertical_lawn_mower_utm(x_min, x_max, y_min, y_max, band_distance)
-    elif normalized_angle == 90:
-        return _create_horizontal_lawn_mower_utm(x_min, x_max, y_min, y_max, band_distance)
-    else:
-        # For angled lawn mowing, use the new approach
-        return _create_angled_lawn_mower_utm(x_min, x_max, y_min, y_max, band_distance, normalized_angle)
+    # For angled lawn mowing, use the new approach
+    return _create_angled_lawn_mower_utm(x_min, x_max, y_min, y_max, band_distance, normalized_angle)
 
 
-def _create_vertical_lawn_mower_utm(x_min: float, x_max: float, y_min: float, y_max: float,
-                                    band_distance: float) -> List[Tuple[float, float]]:
-    """
-    Create a lawn mower pattern with vertical bands (south-north) using UTM coordinates.
-    
-    Args:
-        x_min: Minimum x (easting) of the rectangle in UTM
-        x_max: Maximum x (easting) of the rectangle in UTM
-        y_min: Minimum y (northing) of the rectangle in UTM
-        y_max: Maximum y (northing) of the rectangle in UTM
-        band_distance: Maximum distance between bands in meters
-
-    Returns:
-        List[Tuple[float, float]]: List of coordinate tuples in the same format as the input
-    """
-
-    # Calculate the width in meters (already in meters since using UTM)
-    width_meters = x_max - x_min
-
-    # Calculate the number of bands needed
-    num_bands = max(2, math.ceil(width_meters / band_distance) + 1)
-
-    # Calculate the actual band distance in meters
-    actual_band_distance = width_meters / (num_bands - 1) if num_bands > 1 else width_meters
-
-    # Verify the actual band distance is at most the specified distance
-    if actual_band_distance > band_distance:
-        # If it's still too large, increase the number of bands
-        num_bands += 1
-        actual_band_distance = width_meters / (num_bands - 1)
-
-    # Create coordinates for vertical bands in UTM
-    utm_coordinates = []
-    for i in range(num_bands):
-        x = x_min + i * actual_band_distance
-
-        # For even-indexed bands, go from south to north
-        if i % 2 == 0:
-            utm_coordinates.append((x, y_min))
-            utm_coordinates.append((x, y_max))
-        # For odd-indexed bands, go from north to south
-        else:
-            utm_coordinates.append((x, y_max))
-            utm_coordinates.append((x, y_min))
-
-    return utm_coordinates
+def find_horizontal_intersect(
+        point: Tuple[float, float],
+        vector: Tuple[float, float],
+        y: float
+) -> float | None:
+    if vector[1] == 0:
+        return None
+    eps = 1e-10
+    if abs(point[1] - y) < eps:
+        return point[0]
+    return point[0] + (y - point[1]) * vector[0] / vector[1]
 
 
-def _create_horizontal_lawn_mower_utm(
-        x_min: float,
-        x_max: float,
-        y_min: float,
-        y_max: float,
-        band_distance: float
+def find_vertical_intersect(
+        point: Tuple[float, float],
+        vector: Tuple[float, float],
+        y: float
+) -> float | None:
+    return find_horizontal_intersect((point[1], point[0]), (vector[1], vector[0]), y)
+
+
+def find_line_rectangle_intersections(
+        rectangle_corners: Tuple[Tuple[float, float], Tuple[float, float]],
+        point: Tuple[float, float],
+        vector: Tuple[float, float]
 ) -> List[Tuple[float, float]]:
     """
-    Create a lawn mower pattern with horizontal bands (west-east) using UTM coordinates.
+    Find the intersection points between a line and a rectangle.
+    If the line aligned with an edge, we consider it doe not intersect
     
     Args:
-        x_min: Minimum x (easting) of the rectangle in UTM
-        x_max: Maximum x (easting) of the rectangle in UTM
-        y_min: Minimum y (northing) of the rectangle in UTM
-        y_max: Maximum y (northing) of the rectangle in UTM
-        band_distance: Maximum distance between bands in meters
-
+        rectangle_corners: A tuple of two corner points (x_min, y_min), (x_max, y_max) defining the rectangle
+        point: The starting point (x, y) of the line
+        vector: The direction vector (dx, dy) of the line
+        
     Returns:
-        List[Tuple[float, float]]: List of coordinate tuples in the same format as the input
+        List[Tuple[float, float]]: 0, 1, or 2 unique positions where the line intersects the rectangle
     """
+    # Extract rectangle coordinates
+    (x_min, y_min), (x_max, y_max) = rectangle_corners
 
-    # Calculate the height in meters (already in meters since using UTM)
-    height_meters = y_max - y_min
+    # Extract line parameters
+    px, py = point
+    dx, dy = vector
 
-    # Calculate the number of bands needed
-    num_bands = max(2, math.ceil(height_meters / band_distance) + 1)
+    if dy == 0 and (py == y_max or py == y_min):
+        return []
+    if dx == 0 and (px == x_max or px == x_min):
+        return []
 
-    # Calculate the actual band distance in meters
-    actual_band_distance = height_meters / (num_bands - 1) if num_bands > 1 else height_meters
+    intersects = []
 
-    # Verify the actual band distance is at most the specified distance
-    if actual_band_distance > band_distance:
-        # If it's still too large, increase the number of bands
-        num_bands += 1
-        actual_band_distance = height_meters / (num_bands - 1)
+    # find each intersection with sideline and keep them if they are within the rectangle
+    x_y_min = find_horizontal_intersect(point, vector, y_min)
+    if x_y_min is not None and x_min <= x_y_min <= x_max:
+        intersects.append((x_y_min, y_min))
 
-    # Create coordinates for horizontal bands in UTM
-    utm_coordinates = []
-    for i in range(num_bands):
-        y = y_min + i * actual_band_distance
+    x_y_max = find_horizontal_intersect(point, vector, y_max)
+    if x_y_max is not None and x_min <= x_y_max <= x_max:
+        intersects.append((x_y_max, y_max))
 
-        # For even-indexed bands, go from west to east
-        if i % 2 == 0:
-            utm_coordinates.append((x_min, y))
-            utm_coordinates.append((x_max, y))
-        # For odd-indexed bands, go from east to west
-        else:
-            utm_coordinates.append((x_max, y))
-            utm_coordinates.append((x_min, y))
+    y_x_min = find_vertical_intersect(point, vector, x_min)
+    if y_x_min is not None and y_min < y_x_min < y_max:
+        intersects.append((x_min, y_x_min))
 
-    # If the original coordinates were already in UTM, return the UTM coordinates
-    return utm_coordinates
+    y_x_max = find_vertical_intersect(point, vector, x_max)
+    if y_x_max is not None and y_min < y_x_max < y_max:
+        intersects.append((x_max, y_x_max))
+    return intersects
+
+
+def distance(p1: Tuple[float, float], p2: Tuple[float, float]) -> float:
+    return math.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2)
 
 
 def _create_angled_lawn_mower_utm(
@@ -189,26 +157,16 @@ def _create_angled_lawn_mower_utm(
         (x_min, y_max),  # Top-left
     ]
 
-    # Initialize the list of coordinates
     utm_coordinates = []
 
-    # Calculate the center of the rectangle
     center_x = (x_min + x_max) / 2
     center_y = (y_min + y_max) / 2
 
-    # Convert angle to radians
-    # Adjust the angle to match the expected convention:
-    # 0 degrees is South->North, 90 degrees is East->West
-    # For the line direction vector, we need the perpendicular to the band direction
-    # So we add 90 degrees to the angle
-    line_angle_rad = math.radians((angle + 90) % 180)
+    line_angle_rad = math.radians(angle % 180)
 
-    # Calculate the direction vector for the lines
-    # This vector is perpendicular to the band direction
-    dx = math.sin(line_angle_rad)
-    dy = math.cos(line_angle_rad)
+    dx = math.cos(line_angle_rad)
+    dy = math.sin(line_angle_rad)
 
-    # Calculate the rectangle's dimensions in meters (already in meters since using UTM)
     width_meters = x_max - x_min
     height_meters = y_max - y_min
 
@@ -227,8 +185,8 @@ def _create_angled_lawn_mower_utm(
     start_offset = -projection_length / 2
 
     # Calculate the band direction vector (perpendicular to the line direction)
-    band_dx = -dy  # Perpendicular to line direction
-    band_dy = dx  # Perpendicular to line direction
+    band_dx = -dy
+    band_dy = dx
 
     # Store all intersections to ensure we don't have duplicate waypoints
     all_intersections = []
@@ -236,113 +194,26 @@ def _create_angled_lawn_mower_utm(
     for i in range(num_bands):
         # Calculate the offset for this band
         offset = start_offset + i * actual_band_distance
+        p_x = center_x + offset * band_dx
+        p_y = center_y + offset * band_dy
 
-        # Find the intersections of this band with the rectangle edges
-        band_intersections = []
+        intersects = find_line_rectangle_intersections(
+            ((x_min, y_min), (x_max, y_max)),
+            (p_x, p_y),
+            (dx, dy)
+        )
 
-        # Check each edge of the rectangle
-        for j in range(4):
-            # Get the current edge
-            start_corner = corners[j]
-            end_corner = corners[(j + 1) % 4]
+        if len(all_intersections) == 0 or len(intersects) <= 1:
+            all_intersections.extend(intersects)
+        elif len(intersects) == 2:
+            p_last = all_intersections[-1]
+            d_1 = distance(p_last, intersects[0])
+            d_2 = distance(p_last, intersects[1])
+            if d_1 < d_2:
+                all_intersections.extend(intersects)
+            else:
+                all_intersections.extend(intersects[::-1])
+        else:
+            raise RuntimeError(f'intersections get more than two elements: {intersects} ')
 
-            # Convert to local coordinates (in meters) relative to center
-            start_x = start_corner[0] - center_x
-            start_y = start_corner[1] - center_y
-            end_x = end_corner[0] - center_x
-            end_y = end_corner[1] - center_y
-
-            # Check if the line intersects with this edge
-            # Line equation: dx * (x - offset * band_dx) + dy * (y - offset * band_dy) = 0
-            # Edge equation: y = start_y + (end_y - start_y) * t, x = start_x + (end_x - start_x) * t, 0 <= t <= 1
-
-            # Calculate the denominator
-            denominator = dx * (end_x - start_x) + dy * (end_y - start_y)
-
-            # If the denominator is close to zero, the line is parallel to the edge
-            if abs(denominator) < 1e-10:
-                continue
-
-            # Calculate t
-            t = (dx * (offset * band_dx - start_x) + dy * (offset * band_dy - start_y)) / denominator
-
-            # Check if the intersection is on the edge
-            if 0 <= t <= 1:
-                # Calculate the intersection point
-                intersection_x = start_x + (end_x - start_x) * t
-                intersection_y = start_y + (end_y - start_y) * t
-
-                # Convert back to absolute coordinates
-                intersection_x_abs = center_x + intersection_x
-                intersection_y_abs = center_y + intersection_y
-
-                # Add to the list of intersections
-                band_intersections.append((intersection_x_abs, intersection_y_abs))
-
-        # If we found exactly 2 intersections, add them as waypoints
-        if len(band_intersections) == 2:
-            # Sort the intersections to ensure consistent direction along the angle
-            # We want to sort them in the direction of the angle
-            # Calculate the dot product of the vector from point1 to point2 with the band direction
-            p1_x, p1_y = band_intersections[0]
-            p2_x, p2_y = band_intersections[1]
-
-            # Calculate the vector from p1 to p2
-            vec_x = p2_x - p1_x
-            vec_y = p2_y - p1_y
-
-            # Calculate the dot product with the band direction
-            dot_product = vec_x * band_dx + vec_y * band_dy
-
-            # For even-indexed bands, go in the direction of the angle
-            # For odd-indexed bands, go in the opposite direction
-            if (i % 2 == 0 and dot_product < 0) or (i % 2 == 1 and dot_product > 0):
-                # Swap the points to get the correct direction
-                band_intersections[0], band_intersections[1] = band_intersections[1], band_intersections[0]
-
-            # Check if these intersections are too close to any existing waypoints
-            # This prevents having consecutive bands with the same waypoints
-            epsilon = 1e-10
-
-            # Create a copy of band_intersections that we can modify
-            adjusted_intersections = []
-
-            for idx, (new_x, new_y) in enumerate(band_intersections):
-                # Check if this point is a duplicate of any existing point
-                is_duplicate = False
-                for ex_x, ex_y in all_intersections:
-                    if (abs(ex_x - new_x) < epsilon and abs(ex_y - new_y) < epsilon):
-                        is_duplicate = True
-                        break
-
-                if is_duplicate:
-                    # Adjust the point based on which edge it's on
-                    adjusted_x, adjusted_y = new_x, new_y
-
-                    # Determine which edge the point is on and adjust accordingly
-                    if abs(new_y - y_min) < epsilon:  # Bottom edge
-                        adjusted_x = new_x + 1e-8
-                    elif abs(new_y - y_max) < epsilon:  # Top edge
-                        adjusted_x = new_x - 1e-8
-                    elif abs(new_x - x_min) < epsilon:  # Left edge
-                        adjusted_y = new_y + 1e-8
-                    elif abs(new_x - x_max) < epsilon:  # Right edge
-                        adjusted_y = new_y - 1e-8
-
-                    # Add the adjusted point
-                    adjusted_intersections.append((adjusted_x, adjusted_y))
-                else:
-                    # Add the original point
-                    adjusted_intersections.append((new_x, new_y))
-
-            # Replace band_intersections with the adjusted points
-            band_intersections = adjusted_intersections
-
-            # Add the intersections to the list of all intersections
-            all_intersections.extend(band_intersections)
-
-            # Add the coordinates
-            utm_coordinates.append(band_intersections[0])
-            utm_coordinates.append(band_intersections[1])
-
-    return utm_coordinates
+    return all_intersections

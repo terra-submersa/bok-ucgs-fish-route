@@ -23,7 +23,7 @@ class WaypointCoordinate:
 
     def __repr__(self):
         """Return string representation of the waypoint."""
-        return f"WaypointCoordinate(lon={self.lon}, lat={self.lat}, altitude={self.altitude})"
+        return f"(x={self.lon:.15f}, y={self.lat:.15f}, z={self.altitude})"
 
     def __eq__(self, other):
         """Check if two waypoints are equal."""

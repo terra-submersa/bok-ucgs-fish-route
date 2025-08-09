@@ -21,16 +21,17 @@ def create_water_landing_segments(
     geod = Geod(ellps="WGS84")
     _, azimuth, _ = geod.inv(scan_0.lon, scan_0.lat, scan_1.lon, scan_1.lat)
     drop_lon, drop_lat, _ = geod.fwd(scan_0.lon, scan_0.lat, azimuth, distance_to_start)
-    down_lon, down_lat, _ = geod.fwd(drop_lon, drop_lat, azimuth, 1.5)
+    down_lon, down_lat, _ = geod.fwd(drop_lon, drop_lat, azimuth, 2)
 
     air_segment = RouteSegment([
         WaypointCoordinate(lon=down_lon, lat=down_lat, altitude=traveling_altitude),
-        WaypointCoordinate(lon=down_lon, lat=down_lat, altitude=safe_altitude),
     ],
         speed=speed_air
     )
     water_segment = RouteSegment([
-        WaypointCoordinate(lon=drop_lon, lat=drop_lat, altitude=scan_0.altitude)],
+        WaypointCoordinate(lon=down_lon, lat=down_lat, altitude=safe_altitude),
+        WaypointCoordinate(lon=drop_lon, lat=drop_lat, altitude=scan_0.altitude),
+    ],
         speed=speed_water)
 
     return [air_segment, water_segment]
@@ -40,7 +41,7 @@ def create_water_take_off_segment(
         scanning_segment: 'RouteSegment',
         traveling_altitude: float,
         safe_altitude: float = 7,
-        speed_air=3,
+        speed_air=2,
         speed_water=0.5,
 ) -> list['RouteSegment']:
     scan_last = scanning_segment.waypoints[-1]

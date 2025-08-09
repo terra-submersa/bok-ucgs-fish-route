@@ -1,7 +1,59 @@
 from typing import List, Tuple
 
+from pyproj import Geod
+
 from bok_ucgs_fish_route.coordinates.waypoint import WaypointCoordinate
 from pyproj import CRS, Transformer
+
+
+def create_water_landing_segments(
+        scanning_segment: 'RouteSegment',
+        traveling_altitude: float,
+        safe_altitude: float = 7,
+        distance_to_start: float = 5,
+        speed_air=3,
+        speed_water=0.2,
+
+) -> list['RouteSegment']:
+    scan_0 = scanning_segment.waypoints[0]
+    scan_1 = scanning_segment.waypoints[1]
+
+    geod = Geod(ellps="WGS84")
+    _, azimuth, _ = geod.inv(scan_0.lon, scan_0.lat, scan_1.lon, scan_1.lat)
+    drop_lon, drop_lat, _ = geod.fwd(scan_0.lon, scan_0.lat, azimuth, distance_to_start)
+    down_lon, down_lat, _ = geod.fwd(drop_lon, drop_lat, azimuth, 1.5)
+
+    air_segment = RouteSegment([
+        WaypointCoordinate(lon=down_lon, lat=down_lat, altitude=traveling_altitude),
+        WaypointCoordinate(lon=down_lon, lat=down_lat, altitude=safe_altitude),
+    ],
+        speed=speed_air
+    )
+    water_segment = RouteSegment([
+        WaypointCoordinate(lon=drop_lon, lat=drop_lat, altitude=scan_0.altitude)],
+        speed=speed_water)
+
+    return [air_segment, water_segment]
+
+
+def create_water_take_off_segment(
+        scanning_segment: 'RouteSegment',
+        traveling_altitude: float,
+        safe_altitude: float = 7,
+        speed_air=3,
+        speed_water=0.5,
+) -> list['RouteSegment']:
+    scan_last = scanning_segment.waypoints[-1]
+    water_segment = RouteSegment(
+        [WaypointCoordinate(lon=scan_last.lon, lat=scan_last.lat, altitude=safe_altitude)],
+        speed=speed_water
+    )
+    air_segment = RouteSegment(
+        [WaypointCoordinate(lon=scan_last.lon, lat=scan_last.lat, altitude=traveling_altitude)],
+        speed=speed_air
+    )
+    return [water_segment, air_segment]
+
 
 def create_route_segment_from_coordinates(
         coordinates: List[Tuple[float, float]],
@@ -62,13 +114,13 @@ class RouteSegment:
         """
         if not waypoints:
             raise ValueError("RouteSegment must contain at least one waypoint")
-        
+
         # Convert speed to float first, then validate
         self.speed = float(speed)
-        
+
         if self.speed <= 0:
             raise ValueError("Speed must be positive")
-            
+
         self.waypoints = list(waypoints)  # Create a copy of the list
 
     def __len__(self):

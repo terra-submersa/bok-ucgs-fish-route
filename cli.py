@@ -17,7 +17,7 @@ import click
 from flask import Flask
 
 from bok_ucgs_fish_route.coordinates.conversion import convert_corners_from_wgs84_to_utm
-from bok_ucgs_fish_route.coordinates.route import create_route_segment_from_coordinates
+from bok_ucgs_fish_route.coordinates.route import create_route_segment_from_coordinates, create_water_landing_segments, create_water_take_off_segment
 from bok_ucgs_fish_route.exporter.map_exporter import export_route_segment_to_png
 from bok_ucgs_fish_route.exporter.ucgs_exporter import export_ucgs_json
 from bok_ucgs_fish_route.route_planner.lawn_mower import create_route_segment_lawn_mower
@@ -34,6 +34,7 @@ app = Flask(__name__)
 @click.argument("lat1", type=float)
 @click.argument("lon2", type=float)
 @click.argument("lat2", type=float)
+@click.argument("altitude", type=float)
 @click.argument("speed", type=float)
 @click.argument("band_distance", type=float)
 @click.option("--angle", type=float, default=0.0, help="Angle in degrees for lawn mowing direction. 0 is South->North, 90 is East->West (default: 0.0)")
@@ -42,7 +43,7 @@ app = Flask(__name__)
 @click.option("--name", "route_name", type=str, help="route name (optional)")
 @click.option("--image", "out_image", type=str, help="output image file path (optional)")
 @click.option("--ucgs", "out_ucgs", type=str, help="output ucgs json file path (optional)")
-def generate_lawn_mowing(lon1, lat1, lon2, lat2, speed, band_distance, angle, utm, epsg, route_name="to nowhere", out_image=None, out_ucgs=None):
+def generate_lawn_mowing(lon1, lat1, lon2, lat2, altitude, speed, band_distance, angle, utm, epsg, route_name="to nowhere", out_image=None, out_ucgs=None):
     """
     Generate a lawn mowing pattern route map from two corner coordinates, a speed, band distance, and optional angle.
     
@@ -125,9 +126,8 @@ def generate_lawn_mowing(lon1, lat1, lon2, lat2, speed, band_distance, angle, ut
         )
 
         # Create the route segment from coordinates
-        altitude = 15.0  # Default altitude
-        route_segment = create_route_segment_from_coordinates(coordinates, altitude, speed, utm_epsg)
-        print(route_segment)
+        mowing_route_segment = create_route_segment_from_coordinates(coordinates, altitude, speed, utm_epsg)
+        print(mowing_route_segment)
 
         # Determine output path
         if out_image:
@@ -140,15 +140,27 @@ def generate_lawn_mowing(lon1, lat1, lon2, lat2, speed, band_distance, angle, ut
         # Export the route segment to a PNG image
         title = f"{route_name} (Speed: {speed} m/s, band delta: {band_distance} m)"
         export_route_segment_to_png(
-            route_segment=route_segment,
+            route_segment=mowing_route_segment,
             epsg_code=epsg,
             output_path=output_image_path,
             title=title
         )
-        click.echo(f"Map generated and saved to: {output_image_path} with {len(route_segment)} waypoints")
+        click.echo(f"Map generated and saved to: {output_image_path} with {len(mowing_route_segment)} waypoints")
+
+        full_segments = [
+            *create_water_landing_segments(
+                mowing_route_segment,
+                traveling_altitude=12,
+            ),
+            mowing_route_segment,
+            *create_water_take_off_segment(
+                mowing_route_segment,
+                traveling_altitude=12,
+            )
+        ]
 
         if out_ucgs:
-            export_ucgs_json(route_segment, out_ucgs, route_name=route_name, epsg_code='4326')
+            export_ucgs_json(full_segments, out_ucgs, route_name=route_name, epsg_code='4326')
             click.echo(f"Route exported to UCGS JSON file: {out_ucgs}")
 
         return output_image_path

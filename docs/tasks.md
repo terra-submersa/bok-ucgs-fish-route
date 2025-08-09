@@ -57,4 +57,7 @@
   ```
   * You will therefore replace latitude, longitude, altitude, route segments wapoint
   * You will replace the sppeed from the segment speed
-* [ ] fix `_route_segments_to_ucgs_route` so that it takes an EPSG code as argument and ensure the ucGS latitude/longitude are in radians.
+* [x] fix `_route_segments_to_ucgs_route` so that it takes an EPSG code as argument and ensure the ucGS latitude/longitude are in radians.
+* [X] append soft water landing and take off to the scannig route
+* [ ] BUG when choosing next band travel, it chooses the closest of the two points. SHould take into account the angle.
+  ![img_3.png](img_3.png)

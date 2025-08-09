@@ -67,19 +67,19 @@ def _route_segments_to_ucgs_route(segments: List[RouteSegment], epsg_code: str =
 
 
 # STRAIGHT, ADAPTIVE_BANK_TURN
-def export_ucgs_json(route: RouteSegment, output: str, route_name: str = "To Nowhere", epsg_code: str = "4326") -> None:
+def export_ucgs_json(segments: list[RouteSegment], output: str, route_name: str = "To Nowhere", epsg_code: str = "4326") -> None:
     """
     Export a route segment to a UcGS JSON file.
     
     Args:
-        route (RouteSegment): Route segment to export
+        segments (RouteSegment): Route segment to export
         output (str): Output file path
         epsg_code (str, optional): EPSG code for the coordinate reference system. Defaults to "4326" (WGS84).
     """
     route_wrapper = _load_from_json('config/ucgs/route-wrapper.json')
 
     # Convert the route segment to a UcGS route structure
-    route_structure = _route_segments_to_ucgs_route([route], epsg_code)
+    route_structure = _route_segments_to_ucgs_route(segments, epsg_code)
     route_structure["name"] = route_name
 
     # Add the route structure to the wrapper

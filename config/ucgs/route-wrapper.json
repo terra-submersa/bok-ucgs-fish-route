@@ -65,10 +65,10 @@
         "lowBatteryPowerLevel": null,
         "normalBatteryPowerLevel": null,
         "maxRangefinderDistance": 30.0,
-        "minDistanceBetweenWaypoint": 1.0,
+        "minDistanceBetweenWaypoint": 0.5,
         "initialSpeed": 5.0,
         "waypointMaxWaitTime": 25.5,
-        "cornerRadius": 20.0
+        "cornerRadius": 3.0
       }
     }
   ],

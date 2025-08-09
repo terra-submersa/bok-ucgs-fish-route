@@ -89,7 +89,8 @@
     },
     "checkAerodromeNfz" : false,
     "checkCustomNfz" : false,
-    "segments" : [ {
+    "segments" : [
+      {
       "type" : "Waypoint",
       "actions" : [ ],
       "point" : {
@@ -226,7 +227,7 @@
         "cornerRadius" : null
       }
     } ],
-    "takeoffHeight" : null,
+    "takeoffHeight" : 10,
     "cornerRadius" : 20.0
   }
 }

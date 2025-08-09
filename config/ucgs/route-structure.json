@@ -1,0 +1,23 @@
+{
+  "name": null,
+  "creationTime": 1754505904163,
+  "scheduledTime": null,
+  "startDelay": null,
+  "vehicleProfile": "DJI Matrice 350 RTK",
+  "trajectoryType": null,
+  "safeAltitude": 20.0,
+  "maxAltitude": 1500.0,
+  "initialSpeed": 1,
+  "maxSpeed": null,
+  "failsafes": {
+    "rcLost": "GO_HOME",
+    "gpsLost": null,
+    "lowBattery": null,
+    "datalinkLost": null
+  },
+  "checkAerodromeNfz": false,
+  "checkCustomNfz": false,
+  "segments": [],
+  "takeoffHeight": 10,
+  "cornerRadius": 20.0
+}

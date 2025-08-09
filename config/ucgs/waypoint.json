@@ -1,0 +1,18 @@
+  {
+      "type": "Waypoint",
+      "actions": [],
+      "point": {
+        "latitude": null,
+        "longitude": null,
+        "altitude": null,
+        "altitudeType": "AGL"
+      },
+      "parameters": {
+        "avoidObstacles": true,
+        "avoidTerrain": true,
+        "speed": null,
+        "wpTurnType": "STRAIGHT",
+        "altitudeType": "AGL",
+        "cornerRadius": null
+      }
+    }

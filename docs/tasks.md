@@ -30,6 +30,31 @@
   * Where those function are called, we should invoke `create_route_segment_from_coordinates` with altitude and speed to create the final `RouteSegment`.
 * [x] route_planner, assume that the function creating list of coordinates (create_route_segment_lawn_mower and create_route_segment_perimeter) are given  coordinates in UTM coordinates (with metrics cartesian). As distance are small, we cann make this approximation
   * for the flask script, detect is the given coordinates are with (-180/180 and -90/90). If yes, assume that they are in WGS84 and convert them to the appropriate coordinates (reporting so in a logging info statement)
-* [ ] in `lawn_mower.py`, add a function that
+* [X] in `lawn_mower.py`, add a function that
   * takes as argument a rectangle defined by 2 corners, a point p= (x,y), a vector v=(dx, dy)
   * it returns the 0, 1 or 2 unique positions where the line p+v crosses the rectangle.
+* [ ] in ugcs_exporter, implement the function `_route_segments_to_ucgs_route` that take a list of route segments an produce a UcGS route structure.
+  * Here is an example of the UcGS route structure:
+   ```json
+   {
+    "type": "Waypoint",
+    "actions": [],
+    "point": {
+      "latitude": null,
+      "longitude": null,
+      "altitude": null,
+      "altitudeType": "AGL"
+    },
+    "parameters": {
+      "avoidObstacles": true,
+      "avoidTerrain": true,
+      "speed": null,
+      "wpTurnType": "ADAPTIVE_BANK_TURN",
+      "altitudeType": "AGL",
+      "cornerRadius": null
+    }
+  }
+  ```
+  * You will therefore replace latitude, longitude, altitude, route segments wapoint
+  * You will replace the sppeed from the segment speed
+* [ ] fix `_route_segments_to_ucgs_route` so that it takes an EPSG code as argument and ensure the ucGS latitude/longitude are in radians.

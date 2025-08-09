@@ -94,7 +94,7 @@ class TestGenerateLawnMowning:
                     "generate-lawn-mowing",
                     str(lon1), str(lat1), str(lon2), str(lat2), str(speed), str(band_distance),
                     "--epsg", str(epsg),
-                    "--output", output_path
+                    "--image", output_path
                 ]
                 
                 # Add UTM parameter if specified

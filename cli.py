@@ -71,7 +71,7 @@ app = Flask(__name__)
 @click.argument("lat2", type=float)
 @click.option("--altitude", type=float, default=4)
 @click.option("--speed", type=float, default=2)
-@click.option("--band-distance", type=float, default=1)
+@click.option("--band-width", type=float, default=1)
 @click.option("--angle", type=float, default=0.0,
               help="Angle in degrees for lawn mowing direction. 0 is South->North, 90 is East->West (default: 0.0)")
 @click.option("--utm", type=str, help="UTM zone (e.g., '34N') if coordinates are in UTM instead of WGS84")
@@ -79,7 +79,7 @@ app = Flask(__name__)
 @click.option("--name", "route_name", type=str, help="route name (optional)")
 @click.option("--image", "out_image", type=str, help="output image file path (optional)")
 @click.option("--ucgs", "out_ucgs", type=str, help="output ucgs json file path (optional)")
-def generate_lawn_mowing(lon1, lat1, lon2, lat2, altitude, speed, band_distance, angle, utm=None, epsg=None, route_name="to nowhere", out_image=None,
+def generate_lawn_mowing(lon1, lat1, lon2, lat2, altitude, speed, band_width, angle, utm=None, epsg=None, route_name="to nowhere", out_image=None,
                          out_ucgs=None):
     # Create the corner coordinates
     corner1, corner2, utm_corner1, utm_corner2, utm_epsg = extract_utm_corners_utm_epsg(lat1, lat2, lon1, lon2, utm)
@@ -88,7 +88,7 @@ def generate_lawn_mowing(lon1, lat1, lon2, lat2, altitude, speed, band_distance,
     coordinates = create_route_segment_lawn_mower(
         utm_corner1,
         utm_corner2,
-        band_distance,
+        band_width,
         angle
     )
 
@@ -102,10 +102,10 @@ def generate_lawn_mowing(lon1, lat1, lon2, lat2, altitude, speed, band_distance,
     else:
         # Create a temporary file if no output path is provided
         temp_dir = tempfile.gettempdir()
-        output_image_path = os.path.join(temp_dir, f"lawn_mower_map_{corner1[0]}_{corner1[1]}_{corner2[0]}_{corner2[1]}_{speed}_{band_distance}.png")
+        output_image_path = os.path.join(temp_dir, f"lawn_mower_map_{corner1[0]}_{corner1[1]}_{corner2[0]}_{corner2[1]}_{speed}_{band_width}.png")
 
     # Export the route segment to a PNG image
-    title = f"{route_name} (Speed: {speed} m/s, band delta: {band_distance} m)"
+    title = f"{route_name} (Speed: {speed} m/s, band delta: {band_width} m)"
     export_route_segment_to_png(
         route_segment=mowing_route_segment,
         epsg_code=epsg,

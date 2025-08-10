@@ -63,3 +63,7 @@
   ![img_3.png](img_3.png)
 * [x] in `lawn_mower.py`, implement `is_perpendicular_ahead_of_strip`function based on the provided docstring
 * [x] refactor `export_route_segment_to_png` function to add a grey rectangle border around the passed area corners. The area corners are passed by cli.py area. The must not be derived from the route.
+* [x] in `lawn_mower.py`, implement `get_projection_point_on_strip` that wil compute the point perpendicular projection on the line given by the strip vector
+* [X] make the land mowing trajetory so that it does not make angle turn lower than 90 degres.
+![img_4.png](img_4.png)
+* [ ] for two strips (either a vector of two points or a point and None). We assume that if they are two vectors, they are parallels. Compute the distance between the lines, the point and a line, the line and a point or the two points. Do that in lawn_mower.py and name the function distance_strips. 

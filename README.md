@@ -9,7 +9,11 @@ UcGS tool is a classic tool to do so, but theflaying pattern is a bit special:
 
 ## The problem
 
-Give a rectangle coordinates, the distance between two band, a flying angle.
+Give a rectangle coordinates, the distance between two band, a flying angle, speed, and altitude, the program will output a flight plan.
+
+### Constraints
+ * We shall not make turn sharper than 90 degrees
+ * if a turning radius is given, we shall not make a turn between two bands which are closer than twice this radius (and the turning route shall be approximately a circle)
 
 ### WIP flying pattern
 The flying path looks something like below. BEWARE that this example is parlty on land, in order to have know map overlay for testing (else, water is blue all over)

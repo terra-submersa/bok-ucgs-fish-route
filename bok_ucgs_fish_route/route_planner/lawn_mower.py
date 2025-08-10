@@ -22,6 +22,36 @@ def stitch_strips(strips: List[Tuple[Tuple[float, float], Tuple[float, float] | 
     return coordinates
 
 
+def extend_strip_perpendicular_ending(
+        strips: List[Tuple[Tuple[float, float], Tuple[float, float] | None]]
+) -> List[Tuple[Tuple[float, float], Tuple[float, float] | None]]:
+    if len(strips) <= 1:
+        return strips
+    ret_strips = [((s[0][0], s[0][1]), None if s[1] is None else (s[1][0], s[1][1])) for s in strips]
+    for i in range(len(strips) - 1):
+        strip_1 = ret_strips[i]
+        strip_2 = ret_strips[i + 1]
+        start_point_1 = strip_1[0]
+        start_point_2 = strip_2[0]
+        end_point_1 = strip_1[0] if strip_1[1] is None else strip_1[1]
+        end_point_2 = strip_2[0] if strip_2[1] is None else strip_2[1]
+
+        # pushing ahead
+        if i%2 == 0:
+            if is_perpendicular_ahead_of_strip(end_point_1, strip_2):
+                ret_strips[i+1] = (strip_2[0], get_projection_point_on_strip(end_point_1, strip_2))
+            elif is_perpendicular_ahead_of_strip(end_point_2, strip_1):
+                ret_strips[i] = (strip_1[0], get_projection_point_on_strip(end_point_2, strip_1))
+        else:
+            rev_strip_1 = reverse_strip(strip_1)
+            rev_strip_2 = reverse_strip(strip_2)
+            if is_perpendicular_ahead_of_strip(start_point_1, rev_strip_2):
+                ret_strips[i+1] = (get_projection_point_on_strip(start_point_1, rev_strip_2), strip_2[1])
+            elif is_perpendicular_ahead_of_strip(start_point_2, rev_strip_1):
+                ret_strips[i] = (get_projection_point_on_strip(start_point_2, rev_strip_1), strip_1[1])
+
+    return ret_strips
+
 def create_lawn_mower_band_strips(
         corner1: Tuple[float, float],
         corner2: Tuple[float, float],
@@ -249,59 +279,79 @@ def reverse_strip(strip: Tuple[Tuple[float, float], Tuple[float, float] | None])
 def is_perpendicular_ahead_of_strip(
         point: Tuple[float, float],
         strip: Tuple[Tuple[float, float], Tuple[float, float]],
-)->bool:
+) -> bool:
     """
     We project point perpendicularly to strip (defined as a vector of two points).
     if the projection is ahead of the strip (it means on the line defined by vector strip, but further that point strip[1[, return True, else False.
     """
     # Extract the strip start and end points
     strip_start, strip_end = strip
-    
+
     # Check if the point is exactly at the end of the strip
     if point[0] == strip_end[0] and point[1] == strip_end[1]:
         return False
-    
+
     # Calculate the strip vector
     strip_vector = (strip_end[0] - strip_start[0], strip_end[1] - strip_start[1])
-    
+
     # Calculate the vector from strip_start to the point
     point_vector = (point[0] - strip_start[0], point[1] - strip_start[1])
-    
+
     # Calculate the length of the strip vector
-    strip_length = math.sqrt(strip_vector[0]**2 + strip_vector[1]**2)
-    
+    strip_length = math.sqrt(strip_vector[0] ** 2 + strip_vector[1] ** 2)
+
     # Normalize the strip vector
     if strip_length > 0:
         strip_unit_vector = (strip_vector[0] / strip_length, strip_vector[1] / strip_length)
     else:
         return False  # If strip has zero length, return False
-    
+
     # Calculate the dot product to find the projection length
     projection_length = point_vector[0] * strip_unit_vector[0] + point_vector[1] * strip_unit_vector[1]
-    
+
     # If projection length is greater than strip length, the projection is ahead of strip end
     return projection_length > strip_length
 
-def extend_strip_perpendicular_ending(
-        strip_1: Tuple[Tuple[float, float], Tuple[float, float] | None],
-        strip_2: Tuple[Tuple[float, float], Tuple[float, float] | None],
-        tolerance: float = 0.1
-) -> Tuple[Tuple[float, float] | None, Tuple[float, float] | None]:
+
+def get_projection_point_on_strip(
+        point: Tuple[float, float],
+        strip: Tuple[Tuple[float, float], Tuple[float, float]],
+) -> Tuple[float, float]:
     """
-    We assume the strips are parallel, pointing in the same direction (with minimum tolerance) if their two points are not None.
-    We want to extend the end of one of the strips with a colinear point P, so that P is perpendicular to the other strip ends.
-    The function returns a tuple with the point ot add and the end of the first one, or the end of the second one.
-    One of the two points will be None if the extension is successful.
-
-    Rules:
-    * if both have no second point (None), we return (None, None)
-    * Getting the direction
-        * If the first strip as no second point, we take the direction from the second strip
-        * if the second strip has no second point, we take the direction from the first strip
-        * If both strips have second points, we take the direction from the first strip
-
+    Computes the perpendicular projection of a point onto the line defined by the strip vector.
+    
+    Args:
+        point: The point to project (x, y)
+        strip: A tuple of two points defining the strip line ((x1, y1), (x2, y2))
+        
+    Returns:
+        The coordinates of the projection point (x, y)
     """
-    if strip_1[1] is None and strip_2[1] is None:
-        return None, None
+    # Extract the strip start and end points
+    strip_start, strip_end = strip
 
-    pass
+    # Calculate the strip vector
+    strip_vector = (strip_end[0] - strip_start[0], strip_end[1] - strip_start[1])
+
+    # Calculate the vector from strip_start to the point
+    point_vector = (point[0] - strip_start[0], point[1] - strip_start[1])
+
+    # Calculate the length of the strip vector
+    strip_length_squared = strip_vector[0] ** 2 + strip_vector[1] ** 2
+
+    # If strip has zero length, return the strip start point
+    if strip_length_squared == 0:
+        return strip_start
+
+    # Calculate the dot product to find the projection scalar
+    dot_product = (point_vector[0] * strip_vector[0] + point_vector[1] * strip_vector[1])
+
+    # Calculate the projection scalar (t)
+    t = dot_product / strip_length_squared
+
+    # Calculate the projection point coordinates
+    projection_x = strip_start[0] + t * strip_vector[0]
+    projection_y = strip_start[1] + t * strip_vector[1]
+
+    return projection_x, projection_y
+

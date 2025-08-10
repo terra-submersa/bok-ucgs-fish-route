@@ -8,7 +8,7 @@ from bok_ucgs_fish_route.coordinates.conversion import wgs84_to_utm
 from bok_ucgs_fish_route.coordinates.route import RouteSegment, create_route_segment_from_coordinates
 from bok_ucgs_fish_route.route_planner import create_lawn_mower_band_strips
 from bok_ucgs_fish_route.route_planner.lawn_mower import find_line_rectangle_intersections, find_horizontal_intersect, find_vertical_intersect, \
-    two_points_angle, stitch_strips, is_perpendicular_ahead_of_strip
+    two_points_angle, stitch_strips, is_perpendicular_ahead_of_strip, get_projection_point_on_strip
 
 
 @pytest.mark.parametrize("corner1, corner2, speed, band_distance, angle", [
@@ -335,3 +335,56 @@ def test_is_perpendicular_ahead_of_strip(point, strip, expected):
     """Test the function that determines if a point's projection is ahead of a strip."""
     result = is_perpendicular_ahead_of_strip(point, strip)
     assert result == expected
+
+
+@pytest.mark.parametrize("point, strip, expected_projection", [
+    # Test case 1: Point directly on the strip
+    (
+        (2, 2),  # point
+        ((0, 0), (4, 4)),  # strip (start, end)
+        (2, 2)  # expected projection - same as point
+    ),
+    # Test case 2: Point perpendicular to the strip
+    (
+        (0, 3),  # point
+        ((0, 0), (3, 0)),  # horizontal strip
+        (0, 0)  # expected projection
+    ),
+    # Test case 3: Point with non-trivial projection
+    (
+        (1, 2),  # point
+        ((0, 0), (4, 4)),  # diagonal strip
+        (1.5, 1.5)  # expected projection
+    ),
+    # Test case 4: Point with projection beyond strip end
+    (
+        (5, 3),  # point
+        ((0, 0), (4, 4)),  # diagonal strip
+        (4, 4)  # expected projection - clamped to strip end
+    ),
+    # Test case 5: Point with projection before strip start
+    (
+        (-1, 2),  # point
+        ((0, 0), (4, 4)),  # diagonal strip
+        (0.5, 0.5)  # expected projection
+    ),
+    # Test case 6: Vertical strip
+    (
+        (3, 2),  # point
+        ((0, 0), (0, 4)),  # vertical strip
+        (0, 2)  # expected projection
+    ),
+    # Test case 7: Zero-length strip
+    (
+        (3, 3),  # point
+        ((2, 2), (2, 2)),  # zero-length strip
+        (2, 2)  # expected projection - strip start/end point
+    ),
+])
+def test_get_projection_point_on_strip(point, strip, expected_projection):
+    """Test the function that computes the perpendicular projection of a point onto a strip."""
+    projection = get_projection_point_on_strip(point, strip)
+    
+    # Use approx for floating point comparisons
+    assert projection[0] == approx(expected_projection[0])
+    assert projection[1] == approx(expected_projection[1])

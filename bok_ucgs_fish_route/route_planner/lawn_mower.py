@@ -6,12 +6,28 @@ from typing import Tuple, List
 logger = logging.getLogger(__name__)
 
 
-def create_route_segment_lawn_mower(
+def stitch_strips(strips: List[Tuple[Tuple[float, float], Tuple[float, float] | None]]) -> List[Tuple[float, float]]:
+    coordinates = []
+    for i, strip in enumerate(strips):
+        if strip[1] is None:
+            coordinates.append(strip[0])
+            continue
+        if i % 2 == 0:
+            coordinates.append(strip[0])
+            coordinates.append(strip[1])
+        else:
+            coordinates.append(strip[1])
+            coordinates.append(strip[0])
+
+    return coordinates
+
+
+def create_lawn_mower_band_strips(
         corner1: Tuple[float, float],
         corner2: Tuple[float, float],
         band_distance: float,
         angle: float = 0.0
-) -> List[Tuple[float, float]]:
+) -> List[Tuple[Tuple[float, float], Tuple[float, float] | None]]:
     """
     Create a list of coordinates with a lawn mower pattern within a rectangle.
 
@@ -33,7 +49,7 @@ def create_route_segment_lawn_mower(
     Example:
         >>> utm_corner1 = (500000, 4000000)  # (easting, northing) in UTM
         >>> utm_corner2 = (500100, 4000100)  # (easting, northing) in UTM
-        >>> utm_coordinates = create_route_segment_lawn_mower(utm_corner1, utm_corner2, 10.0)
+        >>> utm_coordinates = create_lawn_mower_band_strips(utm_corner1, utm_corner2, 10.0)
     """
 
     # Extract coordinates (now in UTM)
@@ -44,12 +60,9 @@ def create_route_segment_lawn_mower(
     x_min, x_max = min(x1, x2), max(x1, x2)
     y_min, y_max = min(y1, y2), max(y1, y2)
 
-    # Normalize angle to 0-180 range (since 180-360 would be the same pattern in reverse)
-    normalized_angle = (90 - angle) % 180
-
     # For standard angles (0, 90, 180), use the optimized approach
     # For angled lawn mowing, use the new approach
-    return _create_angled_lawn_mower_utm(x_min, x_max, y_min, y_max, band_distance, normalized_angle)
+    return _create_lawn_mower_band_strips_utm(x_min, x_max, y_min, y_max, band_distance, angle)
 
 
 def find_horizontal_intersect(
@@ -127,14 +140,20 @@ def distance(p1: Tuple[float, float], p2: Tuple[float, float]) -> float:
     return math.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2)
 
 
-def _create_angled_lawn_mower_utm(
+def two_points_angle(p1: Tuple[float, float], p2: Tuple[float, float]) -> float:
+    dx = p2[0] - p1[0]
+    dy = p2[1] - p1[1]
+    return math.atan2(dx, dy) / math.pi * 180
+
+
+def _create_lawn_mower_band_strips_utm(
         x_min: float,
         x_max: float,
         y_min: float,
         y_max: float,
         band_distance: float,
         angle: float
-) -> List[Tuple[float, float]]:
+) -> List[Tuple[Tuple[float, float], Tuple[float, float] | None]]:
     """
     Create a lawn mower pattern with bands at the specified angle using UTM coordinates.
     
@@ -162,7 +181,8 @@ def _create_angled_lawn_mower_utm(
     center_x = (x_min + x_max) / 2
     center_y = (y_min + y_max) / 2
 
-    line_angle_rad = math.radians(angle % 180)
+    normalized_angle = (90 - angle) % 180
+    line_angle_rad = math.radians(normalized_angle % 180)
 
     dx = math.cos(line_angle_rad)
     dy = math.sin(line_angle_rad)
@@ -189,7 +209,7 @@ def _create_angled_lawn_mower_utm(
     band_dy = dx
 
     # Store all intersections to ensure we don't have duplicate waypoints
-    all_intersections = []
+    all_strips = []
 
     for i in range(num_bands):
         # Calculate the offset for this band
@@ -203,17 +223,18 @@ def _create_angled_lawn_mower_utm(
             (dx, dy)
         )
 
-        if len(all_intersections) == 0 or len(intersects) <= 1:
-            all_intersections.extend(intersects)
+        if len(intersects) == 0:
+            pass
+        elif len(intersects) == 1:
+            all_strips.append((intersects[0], None))
         elif len(intersects) == 2:
-            p_last = all_intersections[-1]
-            d_1 = distance(p_last, intersects[0])
-            d_2 = distance(p_last, intersects[1])
-            if d_1 < d_2:
-                all_intersections.extend(intersects)
-            else:
-                all_intersections.extend(intersects[::-1])
+            print(
+                f'angle={angle} {intersects} -> {two_points_angle(intersects[0], intersects[1])}, {(180 + angle) % 360}')
+            if abs((two_points_angle(intersects[0], intersects[1]) % 360 - (180 + angle) % 360)) < 1:
+                print("REVERSE")
+                intersects = [intersects[1], intersects[0]]
+            all_strips.append((intersects[0], intersects[1]))
         else:
             raise RuntimeError(f'intersections get more than two elements: {intersects} ')
 
-    return all_intersections
+    return all_strips

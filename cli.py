@@ -22,7 +22,7 @@ from bok_ucgs_fish_route.coordinates.route import create_route_segment_from_coor
 from bok_ucgs_fish_route.coordinates.waypoint import WaypointCoordinate
 from bok_ucgs_fish_route.exporter.map_exporter import export_route_segment_to_png
 from bok_ucgs_fish_route.exporter.ucgs_exporter import export_ucgs_json
-from bok_ucgs_fish_route.route_planner.lawn_mower import create_route_segment_lawn_mower
+from bok_ucgs_fish_route.route_planner.lawn_mower import create_lawn_mower_band_strips, stitch_strips
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -85,12 +85,14 @@ def generate_lawn_mowing(lon1, lat1, lon2, lat2, altitude, speed, band_width, an
     corner1, corner2, utm_corner1, utm_corner2, utm_epsg = extract_utm_corners_utm_epsg(lat1, lat2, lon1, lon2, utm)
 
     # Create the lawn mower coordinates using UTM coordinates
-    coordinates = create_route_segment_lawn_mower(
+    strips = create_lawn_mower_band_strips(
         utm_corner1,
         utm_corner2,
         band_width,
         angle
     )
+
+    coordinates = stitch_strips(strips)
 
     # Create the route segment from coordinates
     mowing_route_segment = create_route_segment_from_coordinates(coordinates, altitude, speed, utm_epsg)

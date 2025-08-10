@@ -2,11 +2,13 @@ import math
 from typing import Tuple, List
 
 import pytest
+from pytest import approx
 
 from bok_ucgs_fish_route.coordinates.conversion import wgs84_to_utm
 from bok_ucgs_fish_route.coordinates.route import RouteSegment, create_route_segment_from_coordinates
-from bok_ucgs_fish_route.route_planner import create_route_segment_lawn_mower
-from bok_ucgs_fish_route.route_planner.lawn_mower import find_line_rectangle_intersections, find_horizontal_intersect, find_vertical_intersect
+from bok_ucgs_fish_route.route_planner import create_lawn_mower_band_strips
+from bok_ucgs_fish_route.route_planner.lawn_mower import find_line_rectangle_intersections, find_horizontal_intersect, find_vertical_intersect, \
+    two_points_angle, stitch_strips
 
 
 @pytest.mark.parametrize("corner1, corner2, speed, band_distance, angle", [
@@ -59,23 +61,22 @@ from bok_ucgs_fish_route.route_planner.lawn_mower import find_line_rectangle_int
             30.0,  # angle in degrees (diagonal)
     ),
 ])
-def test_create_route_segment_lawn_mower(corner1, corner2, speed, band_distance, angle):
+def test_create_lawn_mower_band_strips(corner1, corner2, speed, band_distance, angle):
     """
     Test that create_route_segment_lawn_mower correctly creates a route segment
     with a lawn mower pattern within the rectangle.
     """
     # Create the coordinates
-    coordinates = create_route_segment_lawn_mower(corner1, corner2, band_distance, angle)
+    strips = create_lawn_mower_band_strips(corner1, corner2, band_distance, angle)
 
-    def two_points_angle(p1: Tuple[float, float], p2: Tuple[float, float]) -> int:
-        dx = p2[0] - p1[0]
-        dy = p2[1] - p1[1]
-        return round(math.atan2(dx, dy) / math.pi * 180) % 180
+    assert len(strips) >= 2
 
-    assert len(coordinates) >= 4
-    for p1, p2 in zip(coordinates[:-1], coordinates[1:]):
+    print(strips)
+    for p1, p2 in strips:
+        if p2 is None:
+            continue
         got_angle = two_points_angle(p1, p2)
-        assert got_angle in {0, 90, angle, angle - 1, angle + 1}
+        assert got_angle == approx(angle, abs=1.0)
 
 
 @pytest.mark.parametrize("angle", [0.0, 90.0])
@@ -85,7 +86,8 @@ def test_lawn_mower_band_distance(angle):
     corner2 = wgs84_to_utm(23.136, 37.430)
     band_distance = 50.0  # meters
     speed = 2.5
-    coordinates = create_route_segment_lawn_mower(corner1, corner2, band_distance, angle)
+    strips = create_lawn_mower_band_strips(corner1, corner2, band_distance, angle)
+    coordinates = stitch_strips(strips)
     altitude = 0.0  # Default altitude
     route_segment = create_route_segment_from_coordinates(coordinates, altitude, speed, "32634")
 

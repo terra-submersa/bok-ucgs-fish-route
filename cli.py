@@ -12,6 +12,7 @@ that all waypoint coordinates are stored in the UTM referential.
 import logging
 import os
 import tempfile
+from email.policy import default
 
 import click
 from flask import Flask
@@ -48,9 +49,6 @@ app = Flask(__name__)
  - LAT1: Y-coordinate of the first corner (latitude in WGS84 or northing in UTM)
  - LON2: X-coordinate of the second corner (longitude in WGS84 or easting in UTM)
  - LAT2: Y-coordinate of the second corner (latitude in WGS84 or northing in UTM)
- - ALTITUDE: Altitude in meters above sea level
- - SPEED: Speed in meters per second
- - BAND_DISTANCE: Maximum distance between two bands in meters
  
  Options:
  
@@ -71,9 +69,9 @@ app = Flask(__name__)
 @click.argument("lat1", type=float)
 @click.argument("lon2", type=float)
 @click.argument("lat2", type=float)
-@click.argument("altitude", type=float)
-@click.argument("speed", type=float)
-@click.argument("band_distance", type=float)
+@click.option("--altitude", type=float, default=4)
+@click.option("--speed", type=float, default=2)
+@click.option("--band-distance", type=float, default=1)
 @click.option("--angle", type=float, default=0.0,
               help="Angle in degrees for lawn mowing direction. 0 is South->North, 90 is East->West (default: 0.0)")
 @click.option("--utm", type=str, help="UTM zone (e.g., '34N') if coordinates are in UTM instead of WGS84")
@@ -81,7 +79,8 @@ app = Flask(__name__)
 @click.option("--name", "route_name", type=str, help="route name (optional)")
 @click.option("--image", "out_image", type=str, help="output image file path (optional)")
 @click.option("--ucgs", "out_ucgs", type=str, help="output ucgs json file path (optional)")
-def generate_lawn_mowing(lon1, lat1, lon2, lat2, altitude, speed, band_distance, angle, utm, epsg, route_name="to nowhere", out_image=None, out_ucgs=None):
+def generate_lawn_mowing(lon1, lat1, lon2, lat2, altitude, speed, band_distance, angle, utm=None, epsg=None, route_name="to nowhere", out_image=None,
+                         out_ucgs=None):
     # Create the corner coordinates
     corner1, corner2, utm_corner1, utm_corner2, utm_epsg = extract_utm_corners_utm_epsg(lat1, lat2, lon1, lon2, utm)
 
@@ -115,7 +114,7 @@ def generate_lawn_mowing(lon1, lat1, lon2, lat2, altitude, speed, band_distance,
     )
     click.echo(f"Map generated and saved to: {output_image_path} with {len(mowing_route_segment)} waypoints")
 
-    full_segments = add_water_entry_exit_segments(mowing_route_segment)
+    full_segments = add_water_entry_exit_segments(mowing_route_segment, traveling_altitude=12)
 
     if out_ucgs:
         export_ucgs_json(full_segments, out_ucgs, route_name=route_name, epsg_code='4326')
@@ -142,9 +141,6 @@ def generate_lawn_mowing(lon1, lat1, lon2, lat2, altitude, speed, band_distance,
  - LAT1: Y-coordinate of the first corner (latitude in WGS84 or northing in UTM)
  - LON2: X-coordinate of the second corner (longitude in WGS84 or easting in UTM)
  - LAT2: Y-coordinate of the second corner (latitude in WGS84 or northing in UTM)
- - ALTITUDE: Altitude in meters above sea level
- - SPEED: Speed in meters per second
- - NB_TIMES: the number of round trip to do
  
  Options:
  
@@ -162,13 +158,13 @@ def generate_lawn_mowing(lon1, lat1, lon2, lat2, altitude, speed, band_distance,
 @click.argument("lat1", type=float)
 @click.argument("lon2", type=float)
 @click.argument("lat2", type=float)
-@click.argument("altitude", type=float)
-@click.argument("speed", type=float)
-@click.argument("nb_times", type=int)
-@click.option("--utm", type=str, help="UTM zone (e.g., '34N') if coordinates are in UTM instead of WGS84")
-@click.option("--name", "route_name", type=str, help="route name (optional)")
+@click.option("--altitude", type=float, default=4)
+@click.option("--speed", type=float, default=2)
+@click.option("--nb-times", type=int, default=2)
+@click.option("--utm", type=str, help="UTM zone (e.g., '34N') if coordinates are in UTM instead of   WGS84")
+@click.option("--name", "route_name", type=str, help="route name (optional)", default="to nowhere")
 @click.option("--ucgs", "out_ucgs", type=str, help="output ucgs json file path (optional)")
-def generate_back_and_forth(lon1, lat1, lon2, lat2, altitude, speed, nb_times: int, utm, route_name="to nowhere", out_image=None, out_ucgs=None):
+def generate_back_and_forth(lon1, lat1, lon2, lat2, altitude, speed, nb_times: int, utm, route_name, out_ucgs=None):
     # Create the corner coordinates
     corner1, corner2, utm_corner1, utm_corner2, utm_epsg = extract_utm_corners_utm_epsg(lat1, lat2, lon1, lon2, utm)
 

@@ -133,7 +133,7 @@ class TestUcgsExporter(unittest.TestCase):
 
             # Verify the mocks were called correctly
             mock_load_from_json.assert_called_once_with('config/ucgs/route-wrapper.json')
-            mock_route_segments_to_ucgs_route.assert_called_once_with([self.segment1], "4326")
+            mock_route_segments_to_ucgs_route.assert_called_once_with(self.segment1, "4326")
         finally:
             # Clean up the temporary file
             os.unlink(temp_filename)

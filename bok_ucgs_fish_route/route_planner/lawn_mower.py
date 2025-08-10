@@ -238,3 +238,44 @@ def _create_lawn_mower_band_strips_utm(
             raise RuntimeError(f'intersections get more than two elements: {intersects} ')
 
     return all_strips
+
+
+def reverse_strip(strip: Tuple[Tuple[float, float], Tuple[float, float] | None]) -> Tuple[Tuple[float, float], Tuple[float, float] | None]:
+    if strip[1] is None:
+        return strip
+    return strip[1], strip[0]
+
+
+def is_perpendicular_ahead_of_strip(
+        point: Tuple[float, float],
+        strip: Tuple[Tuple[float, float], Tuple[float, float]],
+)->bool:
+    """
+    We project point perpendicularly to strip (defined as a vector of two points).
+    if the projection is ahead of the strip (it means on the line defined by vector strip, but further that point strip[1[, return True, else False.
+    """
+    pass
+
+def extend_strip_perpendicular_ending(
+        strip_1: Tuple[Tuple[float, float], Tuple[float, float] | None],
+        strip_2: Tuple[Tuple[float, float], Tuple[float, float] | None],
+        tolerance: float = 0.1
+) -> Tuple[Tuple[float, float] | None, Tuple[float, float] | None]:
+    """
+    We assume the strips are parallel, pointing in the same direction (with minimum tolerance) if their two points are not None.
+    We want to extend the end of one of the strips with a colinear point P, so that P is perpendicular to the other strip ends.
+    The function returns a tuple with the point ot add and the end of the first one, or the end of the second one.
+    One of the two points will be None if the extension is successful.
+
+    Rules:
+    * if both have no second point (None), we return (None, None)
+    * Getting the direction
+        * If the first strip as no second point, we take the direction from the second strip
+        * if the second strip has no second point, we take the direction from the first strip
+        * If both strips have second points, we take the direction from the first strip
+
+    """
+    if strip_1[1] is None and strip_2[1] is None:
+        return None, None
+
+    pass

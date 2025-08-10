@@ -62,3 +62,4 @@
 * [X] BUG when choosing next band travel, it  chooses the closest of the two points. SHould take into account the angle.
   ![img_3.png](img_3.png)
 * [x] in `lawn_mower.py`, implement `is_perpendicular_ahead_of_strip`function based on the provided docstring
+* [x] refactor `export_route_segment_to_png` function to add a grey rectangle border around the passed area corners. The area corners are passed by cli.py area. The must not be derived from the route.

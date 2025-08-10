@@ -112,6 +112,7 @@ def generate_lawn_mowing(lon1, lat1, lon2, lat2, altitude, speed, band_width, an
         route_segment=mowing_route_segment,
         epsg_code=epsg,
         output_path=output_image_path,
+        area_corners=(corner1, corner2),
         title=title
     )
     click.echo(f"Map generated and saved to: {output_image_path} with {len(mowing_route_segment)} waypoints")

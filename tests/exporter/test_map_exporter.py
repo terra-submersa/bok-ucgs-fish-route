@@ -49,6 +49,7 @@ class TestMapExporter:
         mock_gpd.GeoDataFrame.return_value = mock_gdf
         mock_gdf.to_crs.return_value = mock_gdf
         mock_gdf.crs.to_string.return_value = f"EPSG:{epsg_code}"
+        mock_gdf.boundary = mock_gdf
         
         mock_fig = MagicMock()
         mock_ax = MagicMock()
@@ -129,6 +130,7 @@ class TestMapExporter:
         mock_gpd.GeoDataFrame.return_value = mock_gdf
         mock_gdf.to_crs.return_value = mock_gdf
         mock_gdf.crs.to_string.return_value = "EPSG:3857"
+        mock_gdf.boundary = mock_gdf
         
         mock_fig = MagicMock()
         mock_ax = MagicMock()
@@ -144,3 +146,44 @@ class TestMapExporter:
         # Assertions
         mock_exists.assert_called_with("test_dir")
         mock_makedirs.assert_called_with("test_dir")
+        
+    @patch("bok_ucgs_fish_route.exporter.map_exporter.plt")
+    @patch("bok_ucgs_fish_route.exporter.map_exporter.gpd")
+    @patch("bok_ucgs_fish_route.exporter.map_exporter.ctx")
+    def test_export_with_area_corners(
+        self, mock_ctx, mock_gpd, mock_plt, sample_route_segment
+    ):
+        """Test export_route_segment_to_png with area_corners parameter."""
+        # Setup mocks
+        mock_gdf = MagicMock()
+        mock_gpd.GeoDataFrame.return_value = mock_gdf
+        mock_gdf.to_crs.return_value = mock_gdf
+        mock_gdf.crs.to_string.return_value = "EPSG:3857"
+        mock_gdf.boundary = mock_gdf
+        
+        mock_fig = MagicMock()
+        mock_ax = MagicMock()
+        mock_plt.subplots.return_value = (mock_fig, mock_ax)
+        
+        # Define area corners
+        area_corners = ((37.7, -122.5), (37.8, -122.4))  # Example coordinates
+        
+        # Call the function with a temporary file and area_corners
+        with tempfile.NamedTemporaryFile(suffix=".png") as tmp_file:
+            output_path = tmp_file.name
+            result = export_route_segment_to_png(
+                sample_route_segment, 3857, output_path, area_corners=area_corners
+            )
+            
+            # Assertions
+            assert result == output_path
+            # Verify that GeoDataFrame was called at least 3 times (route, waypoints, and border)
+            assert mock_gpd.GeoDataFrame.call_count >= 3
+            mock_gdf.to_crs.assert_called_with(epsg=3857)
+            mock_gdf.plot.assert_called()
+            mock_gdf.boundary.plot.assert_called()
+            mock_ctx.add_basemap.assert_called()
+            mock_plt.savefig.assert_called_with(
+                output_path, dpi=100, bbox_inches='tight'
+            )
+            mock_plt.close.assert_called()

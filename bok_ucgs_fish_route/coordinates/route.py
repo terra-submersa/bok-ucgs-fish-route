@@ -6,6 +6,21 @@ from bok_ucgs_fish_route.coordinates.waypoint import WaypointCoordinate
 from pyproj import CRS, Transformer
 
 
+def add_water_entry_exit_segments(route_segment: 'RouteSegment', traveling_altitude: float) -> 'RouteSegment':
+    """Add water entry and exit waypoints to a route segment."""
+    return [
+        *create_water_landing_segments(
+            route_segment,
+            traveling_altitude=traveling_altitude,
+        ),
+        route_segment,
+        *create_water_take_off_segment(
+            route_segment,
+            traveling_altitude=traveling_altitude,
+        )
+    ]
+
+
 def create_water_landing_segments(
         scanning_segment: 'RouteSegment',
         traveling_altitude: float,

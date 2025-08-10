@@ -36,7 +36,7 @@
         "lowBatteryVoltage": null,
         "lowGpsSatellites": 7.0,
         "normalGpsSatellites": 9.0,
-        "safeDistanceToTerrain": 1.0,
+        "safeDistanceToTerrain": 2.0,
         "safeDistanceToObstacle": 20.0,
         "waypointAcceptanceRadius": 4.0,
         "fenceRadius": 2500.0,

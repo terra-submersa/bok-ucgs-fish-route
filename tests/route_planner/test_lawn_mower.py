@@ -8,7 +8,7 @@ from bok_ucgs_fish_route.coordinates.conversion import wgs84_to_utm
 from bok_ucgs_fish_route.coordinates.route import RouteSegment, create_route_segment_from_coordinates
 from bok_ucgs_fish_route.route_planner import create_lawn_mower_band_strips
 from bok_ucgs_fish_route.route_planner.lawn_mower import find_line_rectangle_intersections, find_horizontal_intersect, find_vertical_intersect, \
-    two_points_angle, stitch_strips, is_perpendicular_ahead_of_strip, get_projection_point_on_strip
+    two_points_angle, stitch_strips, is_perpendicular_ahead_of_strip, get_projection_point_on_strip, distance_strips
 
 
 @pytest.mark.parametrize("corner1, corner2, speed, band_distance, angle", [
@@ -71,7 +71,7 @@ def test_create_lawn_mower_band_strips(corner1, corner2, speed, band_distance, a
 
     assert len(strips) >= 2
 
-    print(strips)
+    # assert angle
     for p1, p2 in strips:
         if p2 is None:
             continue
@@ -388,3 +388,55 @@ def test_get_projection_point_on_strip(point, strip, expected_projection):
     # Use approx for floating point comparisons
     assert projection[0] == approx(expected_projection[0])
     assert projection[1] == approx(expected_projection[1])
+
+
+@pytest.mark.parametrize("strip1, strip2, expected_distance", [
+    # Case 1: Two points
+    (
+        ((1, 1), None),  # First strip (point)
+        ((4, 5), None),  # Second strip (point)
+        5.0  # Expected distance (Euclidean)
+    ),
+    # Case 2: Point and line
+    (
+        ((3, 4), None),  # First strip (point)
+        ((0, 0), (10, 0)),  # Second strip (horizontal line)
+        4.0  # Expected distance (perpendicular)
+    ),
+    # Case 3: Line and point
+    (
+        ((0, 0), (0, 10)),  # First strip (vertical line)
+        ((5, 5), None),  # Second strip (point)
+        5.0  # Expected distance (perpendicular)
+    ),
+    # Case 4: Two parallel lines
+    (
+        ((0, 0), (10, 0)),  # First strip (horizontal line)
+        ((0, 5), (10, 5)),  # Second strip (parallel horizontal line)
+        5.0  # Expected distance (perpendicular)
+    ),
+    # Case 5: Two parallel diagonal lines
+    (
+        ((0, 0), (10, 10)),  # First strip (diagonal line)
+        ((0, 5), (10, 15)),  # Second strip (parallel diagonal line)
+        3.5355  # Expected distance (perpendicular) - sqrt(5^2/2)
+    ),
+    # Case 6: Zero distance (overlapping lines)
+    (
+        ((0, 0), (10, 0)),  # First strip
+        ((5, 0), (15, 0)),  # Second strip (same line)
+        0.0  # Expected distance
+    ),
+    # Case 7: Point on line
+    (
+        ((5, 0), None),  # First strip (point)
+        ((0, 0), (10, 0)),  # Second strip (line)
+        0.0  # Expected distance
+    ),
+])
+def test_distance_strips(strip1, strip2, expected_distance):
+    """Test the function that computes the distance between two strips."""
+    distance = distance_strips(strip1, strip2)
+    
+    # Use approx for floating point comparisons
+    assert distance == approx(expected_distance, abs=1e-4)

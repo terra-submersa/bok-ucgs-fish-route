@@ -355,3 +355,56 @@ def get_projection_point_on_strip(
 
     return projection_x, projection_y
 
+
+def distance_strips(
+        strip1: Tuple[Tuple[float, float], Tuple[float, float] | None],
+        strip2: Tuple[Tuple[float, float], Tuple[float, float] | None]
+) -> float:
+    """
+    Compute the distance between two strips. A strip can be either a vector of two points or a point and None.
+    We assume that if both strips are vectors (two points each), they are parallel.
+    
+    This function handles four cases:
+    1. Two parallel lines: Returns the perpendicular distance between them
+    2. A point and a line: Returns the perpendicular distance from the point to the line
+    3. A line and a point: Returns the perpendicular distance from the point to the line
+    4. Two points: Returns the Euclidean distance between the points
+    
+    Args:
+        strip1: First strip ((x1, y1), (x2, y2)) or ((x1, y1), None)
+        strip2: Second strip ((x1, y1), (x2, y2)) or ((x1, y1), None)
+        
+    Returns:
+        The distance between the strips
+    """
+    # Case 1: Both strips are points (one point each)
+    if strip1[1] is None and strip2[1] is None:
+        return distance(strip1[0], strip2[0])
+    
+    # Case 2: First strip is a point, second is a line
+    elif strip1[1] is None:
+        point = strip1[0]
+        line = strip2
+        # Project the point onto the line
+        projection = get_projection_point_on_strip(point, line)
+        # Return the distance between the point and its projection
+        return distance(point, projection)
+    
+    # Case 3: First strip is a line, second is a point
+    elif strip2[1] is None:
+        point = strip2[0]
+        line = strip1
+        # Project the point onto the line
+        projection = get_projection_point_on_strip(point, line)
+        # Return the distance between the point and its projection
+        return distance(point, projection)
+    
+    # Case 4: Both strips are lines (assumed to be parallel)
+    else:
+        # Take a point from the first line
+        point = strip1[0]
+        # Project it onto the second line
+        projection = get_projection_point_on_strip(point, strip2)
+        # Return the distance between the point and its projection
+        return distance(point, projection)
+

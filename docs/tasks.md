@@ -66,4 +66,4 @@
 * [x] in `lawn_mower.py`, implement `get_projection_point_on_strip` that wil compute the point perpendicular projection on the line given by the strip vector
 * [X] make the land mowing trajetory so that it does not make angle turn lower than 90 degres.
 ![img_4.png](img_4.png)
-* [ ] for two strips (either a vector of two points or a point and None). We assume that if they are two vectors, they are parallels. Compute the distance between the lines, the point and a line, the line and a point or the two points. Do that in lawn_mower.py and name the function distance_strips. 
+* [x] for two strips (either a vector of two points or a point and None). We assume that if they are two vectors, they are parallels. Compute the distance between the lines, the point and a line, the line and a point or the two points. Do that in lawn_mower.py and name the function distance_strips. 

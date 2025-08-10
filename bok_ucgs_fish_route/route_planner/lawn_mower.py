@@ -254,7 +254,33 @@ def is_perpendicular_ahead_of_strip(
     We project point perpendicularly to strip (defined as a vector of two points).
     if the projection is ahead of the strip (it means on the line defined by vector strip, but further that point strip[1[, return True, else False.
     """
-    pass
+    # Extract the strip start and end points
+    strip_start, strip_end = strip
+    
+    # Check if the point is exactly at the end of the strip
+    if point[0] == strip_end[0] and point[1] == strip_end[1]:
+        return False
+    
+    # Calculate the strip vector
+    strip_vector = (strip_end[0] - strip_start[0], strip_end[1] - strip_start[1])
+    
+    # Calculate the vector from strip_start to the point
+    point_vector = (point[0] - strip_start[0], point[1] - strip_start[1])
+    
+    # Calculate the length of the strip vector
+    strip_length = math.sqrt(strip_vector[0]**2 + strip_vector[1]**2)
+    
+    # Normalize the strip vector
+    if strip_length > 0:
+        strip_unit_vector = (strip_vector[0] / strip_length, strip_vector[1] / strip_length)
+    else:
+        return False  # If strip has zero length, return False
+    
+    # Calculate the dot product to find the projection length
+    projection_length = point_vector[0] * strip_unit_vector[0] + point_vector[1] * strip_unit_vector[1]
+    
+    # If projection length is greater than strip length, the projection is ahead of strip end
+    return projection_length > strip_length
 
 def extend_strip_perpendicular_ending(
         strip_1: Tuple[Tuple[float, float], Tuple[float, float] | None],

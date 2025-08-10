@@ -59,5 +59,6 @@
   * You will replace the sppeed from the segment speed
 * [x] fix `_route_segments_to_ucgs_route` so that it takes an EPSG code as argument and ensure the ucGS latitude/longitude are in radians.
 * [X] append soft water landing and take off to the scannig route
-* [ ] BUG when choosing next band travel, it chooses the closest of the two points. SHould take into account the angle.
+* [X] BUG when choosing next band travel, it  chooses the closest of the two points. SHould take into account the angle.
   ![img_3.png](img_3.png)
+* [x] in `lawn_mower.py`, implement `is_perpendicular_ahead_of_strip`function based on the provided docstring

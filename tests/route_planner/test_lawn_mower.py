@@ -8,7 +8,7 @@ from bok_ucgs_fish_route.coordinates.conversion import wgs84_to_utm
 from bok_ucgs_fish_route.coordinates.route import RouteSegment, create_route_segment_from_coordinates
 from bok_ucgs_fish_route.route_planner import create_lawn_mower_band_strips
 from bok_ucgs_fish_route.route_planner.lawn_mower import find_line_rectangle_intersections, find_horizontal_intersect, find_vertical_intersect, \
-    two_points_angle, stitch_strips
+    two_points_angle, stitch_strips, is_perpendicular_ahead_of_strip
 
 
 @pytest.mark.parametrize("corner1, corner2, speed, band_distance, angle", [
@@ -291,3 +291,47 @@ def test_find_line_rectangle_intersections(rectangle_corners, point, vector, exp
     sorted_actual = sorted(intersections, key=lambda p: (p[0], p[1]))
 
     assert sorted_actual == sorted_expected
+
+
+@pytest.mark.parametrize("point, strip, expected", [
+    # Test case 1: Point ahead of strip
+    (
+        (5, 5),  # point
+        ((0, 0), (3, 3)),  # strip (start, end)
+        True  # expected result - point is ahead of strip
+    ),
+    # Test case 2: Point behind strip
+    (
+        (-1, -1),  # point
+        ((0, 0), (3, 3)),  # strip (start, end)
+        False  # expected result - point is behind strip
+    ),
+    # Test case 3: Point on the strip line but before the end
+    (
+        (2, 2),  # point
+        ((0, 0), (3, 3)),  # strip (start, end)
+        False  # expected result - point is on the line but not ahead
+    ),
+    # Test case 4: Point exactly at the end of strip
+    (
+        (3, 3),  # point
+        ((0, 0), (3, 3)),  # strip (start, end)
+        False  # expected result - point is at the end, not ahead
+    ),
+    # Test case 5: Horizontal strip
+    (
+        (5, 0),  # point
+        ((0, 0), (3, 0)),  # strip (start, end)
+        True  # expected result - point is ahead of strip
+    ),
+    # Test case 6: Vertical strip
+    (
+        (0, 5),  # point
+        ((0, 0), (0, 3)),  # strip (start, end)
+        True  # expected result - point is ahead of strip
+    ),
+])
+def test_is_perpendicular_ahead_of_strip(point, strip, expected):
+    """Test the function that determines if a point's projection is ahead of a strip."""
+    result = is_perpendicular_ahead_of_strip(point, strip)
+    assert result == expected

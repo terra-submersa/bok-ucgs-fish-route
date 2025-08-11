@@ -79,10 +79,20 @@ def export_route_segment_to_png(
         geometry=[Point(lon, lat) for lon, lat in zip(lons, lats)],
         crs="EPSG:4326"
     )
+    waypoint_start = gpd.GeoDataFrame(
+        geometry=[Point(lon, lat) for lon, lat in zip([lons[0]], [lats[0]])],
+        crs="EPSG:4326"
+    )
+    waypoint_end = gpd.GeoDataFrame(
+        geometry=[Point(lon, lat) for lon, lat in zip([lons[-1]], [lats[-1]])],
+        crs="EPSG:4326"
+    )
 
     # Reproject to the specified CRS
     route_gdf = route_gdf.to_crs(epsg=epsg_code)
     waypoints_gdf = waypoints_gdf.to_crs(epsg=epsg_code)
+    waypoint_start = waypoint_start.to_crs(epsg=epsg_code)
+    waypoint_end = waypoint_end.to_crs(epsg=epsg_code)
 
     # Create the plot
     fig, ax = plt.subplots(figsize=(width, height))
@@ -92,7 +102,9 @@ def export_route_segment_to_png(
 
     # Plot the waypoints
     waypoints_gdf.plot(ax=ax, color=marker_color, markersize=marker_size)
-    
+    waypoint_start.plot(ax=ax, color='green', markersize=marker_size)
+    waypoint_end.plot(ax=ax, color='red', markersize=marker_size)
+
     # Draw area border if area_corners are provided
     if area_corners:
         corner1, corner2 = area_corners

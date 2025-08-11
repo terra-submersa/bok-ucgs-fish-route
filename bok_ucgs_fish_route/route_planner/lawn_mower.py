@@ -22,7 +22,7 @@ def stitch_strips(strips: List[Tuple[Tuple[float, float], Tuple[float, float] | 
     return coordinates
 
 
-def extend_strip_perpendicular_ending(
+def extend_strips_perpendicular_ending(
         strips: List[Tuple[Tuple[float, float], Tuple[float, float] | None]]
 ) -> List[Tuple[Tuple[float, float], Tuple[float, float] | None]]:
     if len(strips) <= 1:
@@ -37,20 +37,90 @@ def extend_strip_perpendicular_ending(
         end_point_2 = strip_2[0] if strip_2[1] is None else strip_2[1]
 
         # pushing ahead
-        if i%2 == 0:
+        if i % 2 == 0:
             if is_perpendicular_ahead_of_strip(end_point_1, strip_2):
-                ret_strips[i+1] = (strip_2[0], get_projection_point_on_strip(end_point_1, strip_2))
+                ret_strips[i + 1] = (strip_2[0], get_projection_point_on_strip(end_point_1, strip_2))
             elif is_perpendicular_ahead_of_strip(end_point_2, strip_1):
                 ret_strips[i] = (strip_1[0], get_projection_point_on_strip(end_point_2, strip_1))
         else:
             rev_strip_1 = reverse_strip(strip_1)
             rev_strip_2 = reverse_strip(strip_2)
             if is_perpendicular_ahead_of_strip(start_point_1, rev_strip_2):
-                ret_strips[i+1] = (get_projection_point_on_strip(start_point_1, rev_strip_2), strip_2[1])
+                ret_strips[i + 1] = (get_projection_point_on_strip(start_point_1, rev_strip_2), strip_2[1])
             elif is_perpendicular_ahead_of_strip(start_point_2, rev_strip_1):
                 ret_strips[i] = (get_projection_point_on_strip(start_point_2, rev_strip_1), strip_1[1])
 
     return ret_strips
+
+
+def rearrange_index_shortest_path(n: int, lag: int) -> list[int]:
+    """
+    Return a list of index passing through all points 0 to n-1, with making jumps shorter than lag.
+    We have the right to add points.
+
+    Strategy: Eva's style: go back an forth.
+    :param n: number of points
+    :param lag: minimum jumping distance
+    :return: reordered list of points numbers
+
+    Example:
+    n = 14
+    lag = 3
+    0, 3, 6, 9, 12, (+)16, 13, 10, 7, 4, 1, (+)-2, 2, 5, 8, 11
+
+    """
+    p = 0
+    ret = []
+    for i_pass in range(lag):
+        shift = lag if i_pass % 2 == 0 else -lag
+        while 0 <= p < n:
+            ret.append(p)
+            p += shift
+        if i_pass < lag - 1:
+            if shift > 0:
+                p += 1
+                ret.append(p)
+                p -= lag
+                if p > (n - 1):
+                    p -= lag
+            else:
+                ret.append(p)
+                p += lag + 1
+
+    return ret
+
+
+def reorder_strips_turning_radius(
+        strips: List[Tuple[Tuple[float, float], Tuple[float, float] | None]],
+        turning_radius: float
+) -> list[Tuple[Tuple[float, float], Tuple[float, float] | None]]:
+    if len(strips) <= 1:
+        return strips
+    print(f'signed distance between strips: {signed_distance_strips(strips[0], strips[1])}')
+    if signed_distance_strips(strips[0], strips[1]) < 0:
+        strips = strips[::-1]
+    band_real_width = distance_strips(strips[0], strips[1])
+    if turning_radius * 2 < band_real_width:
+        return strips
+
+    strip_lag = math.ceil(turning_radius * 2 / band_real_width)
+    nb_strips = len(strips)
+
+    last_strip = strips[-1]
+    first_strip = strips[0]
+    reorder_indexes = rearrange_index_shortest_path(n=nb_strips, lag=strip_lag)
+    ret_strips = []
+    print(f'nb_strip {nb_strips}, strip_lag={strip_lag} => reorder indexes={reorder_indexes}')
+    for i in reorder_indexes:
+        if 0 <= i < nb_strips:
+            ret_strips.append(strips[i])
+            continue
+        if i < 0:
+            ret_strips.append(create_parallel_strip(first_strip, i * band_real_width))
+        else:
+            ret_strips.append(create_parallel_strip(last_strip, (i - nb_strips + 1) * band_real_width))
+    return ret_strips
+
 
 def create_lawn_mower_band_strips(
         corner1: Tuple[float, float],
@@ -258,10 +328,7 @@ def _create_lawn_mower_band_strips_utm(
         elif len(intersects) == 1:
             all_strips.append((intersects[0], None))
         elif len(intersects) == 2:
-            print(
-                f'angle={angle} {intersects} -> {two_points_angle(intersects[0], intersects[1])}, {(180 + angle) % 360}')
             if abs((two_points_angle(intersects[0], intersects[1]) % 360 - (180 + angle) % 360)) < 1:
-                print("REVERSE")
                 intersects = [intersects[1], intersects[0]]
             all_strips.append((intersects[0], intersects[1]))
         else:
@@ -274,6 +341,60 @@ def reverse_strip(strip: Tuple[Tuple[float, float], Tuple[float, float] | None])
     if strip[1] is None:
         return strip
     return strip[1], strip[0]
+
+
+def create_parallel_strip(
+        strip: Tuple[Tuple[float, float], Tuple[float, float] | None],
+        distance: float
+) -> Tuple[Tuple[float, float], Tuple[float, float] | None]:
+    """
+    Create a paralell strip to the given one at the passed distance.
+    * If distance is a positive number, the strip is moved to the right.
+    * If distance is a negative number, the strip is moved to the left.
+    * If the strip is a point, the strip is moved horizontally by the distance, right if distance positive, left if distance negative.
+    :param strip: A tuple of two points defining the strip ((x1, y1), (x2, y2)) or ((x1, y1), None)
+    :param distance: The distance to move the strip (positive for right, negative for left)
+    :return: A new strip parallel to the original one at the specified distance
+    """
+    # Extract the strip points
+    p1, p2 = strip
+
+    # Case 1: If the strip is a point (p2 is None)
+    if p2 is None:
+        # Move the point horizontally by the distance
+        return (p1[0] + distance, p1[1]), None
+
+    # Case 2: If the strip is a line (both p1 and p2 are points)
+    # Calculate the strip vector
+    vector = (p2[0] - p1[0], p2[1] - p1[1])
+
+    # Calculate the length of the vector
+    vector_length = math.sqrt(vector[0] ** 2 + vector[1] ** 2)
+
+    # If the vector has zero length, treat it as a point
+    if vector_length == 0:
+        return (p1[0] + distance, p1[1]), None
+
+    # Special case for horizontal lines (moving up/down)
+    if abs(vector[1]) < 1e-10:  # y component is approximately zero
+        # For horizontal lines, positive distance moves up, negative moves down
+        new_p1 = (p1[0], p1[1] + distance)
+        new_p2 = (p2[0], p2[1] + distance)
+        return new_p1, new_p2
+
+    # Calculate the unit normal vector (perpendicular to the strip)
+    # For a vector (x, y), the perpendicular vector to the right is (y, -x) normalized
+    # This ensures "right" is consistent with the coordinate system
+    normal_vector = (vector[1] / vector_length, -vector[0] / vector_length)
+
+    # Scale the normal vector by the distance
+    offset_vector = (normal_vector[0] * distance, normal_vector[1] * distance)
+
+    # Create the new strip by offsetting both points
+    new_p1 = (p1[0] + offset_vector[0], p1[1] + offset_vector[1])
+    new_p2 = (p2[0] + offset_vector[0], p2[1] + offset_vector[1])
+
+    return new_p1, new_p2
 
 
 def is_perpendicular_ahead_of_strip(
@@ -356,12 +477,90 @@ def get_projection_point_on_strip(
     return projection_x, projection_y
 
 
+def signed_distance_strips(
+        strip1: Tuple[Tuple[float, float], Tuple[float, float] | None],
+        strip2: Tuple[Tuple[float, float], Tuple[float, float] | None]
+) -> float:
+    """
+    Compute the signed distance between two strips. A strip can be either a vector of two points or a point and None.
+    We assume that if both strips are vectors (two points each), they are parallel.
+    
+    The distance is negative if the second strip is on the left of the first one, positive if it is on the right.
+    If the two strips are points, the distance is always positive.
+    
+    This function handles four cases:
+    1. Two parallel lines: Returns the signed perpendicular distance between them
+    2. A point and a line: Returns the signed perpendicular distance from the point to the line
+    3. A line and a point: Returns the signed perpendicular distance from the point to the line
+    4. Two points: Returns the positive Euclidean distance between the points
+    
+    Args:
+        strip1: First strip ((x1, y1), (x2, y2)) or ((x1, y1), None)
+        strip2: Second strip ((x1, y1), (x2, y2)) or ((x1, y1), None)
+        
+    Returns:
+        The signed distance between the strips
+    """
+    # Case 1: Both strips are points (one point each)
+    if strip1[1] is None and strip2[1] is None:
+        # For two points, always return positive distance
+        return distance(strip1[0], strip2[0])
+
+    # Case 2: First strip is a point, second is a line
+    if strip1[1] is None:
+        point = strip1[0]
+        line = strip2
+        # Project the point onto the line
+        projection = get_projection_point_on_strip(point, line)
+        # Calculate the distance between the point and its projection
+        dist = distance(point, projection)
+
+        # Determine if the point is on the left or right of the line
+        line_vector = (line[1][0] - line[0][0], line[1][1] - line[0][1])
+        point_vector = (point[0] - line[0][0], point[1] - line[0][1])
+
+        # Cross product to determine left/right
+        cross_product = line_vector[0] * point_vector[1] - line_vector[1] * point_vector[0]
+
+        # If cross product is negative, point is on the right of the line
+        return dist if cross_product > 0 else -dist
+
+    # Case 3: First strip is a line, second is a point
+    if strip2[1] is None:
+        return - signed_distance_strips(strip2, strip1)
+
+    # Case 4: Both strips are lines (assumed to be parallel)
+    # Take a point from the first line
+    point = strip1[0]
+    # Project it onto the second line
+    projection = get_projection_point_on_strip(point, strip2)
+    # Calculate the distance between the point and its projection
+    dist = distance(point, projection)
+
+    # Determine if the second line is on the left or right of the first line
+    # We use the normal vector of the first line to determine this
+    line1_vector = (strip1[1][0] - strip1[0][0], strip1[1][1] - strip1[0][1])
+    line1_length = math.sqrt(line1_vector[0] ** 2 + line1_vector[1] ** 2)
+
+    # Calculate the normal vector (perpendicular to the right)
+    normal_vector = (line1_vector[1] / line1_length, -line1_vector[0] / line1_length)
+
+    # Vector from point on first line to its projection on second line
+    projection_vector = (projection[0] - point[0], projection[1] - point[1])
+
+    # Dot product to determine if projection is in the direction of the normal vector
+    dot_product = normal_vector[0] * projection_vector[0] + normal_vector[1] * projection_vector[1]
+
+    # If dot product is positive, second line is on the right of the first line
+    return -dist if dot_product < 0 else dist
+
+
 def distance_strips(
         strip1: Tuple[Tuple[float, float], Tuple[float, float] | None],
         strip2: Tuple[Tuple[float, float], Tuple[float, float] | None]
 ) -> float:
     """
-    Compute the distance between two strips. A strip can be either a vector of two points or a point and None.
+    Compute the absolute distance between two strips. A strip can be either a vector of two points or a point and None.
     We assume that if both strips are vectors (two points each), they are parallel.
     
     This function handles four cases:
@@ -375,36 +574,6 @@ def distance_strips(
         strip2: Second strip ((x1, y1), (x2, y2)) or ((x1, y1), None)
         
     Returns:
-        The distance between the strips
+        The absolute distance between the strips
     """
-    # Case 1: Both strips are points (one point each)
-    if strip1[1] is None and strip2[1] is None:
-        return distance(strip1[0], strip2[0])
-    
-    # Case 2: First strip is a point, second is a line
-    elif strip1[1] is None:
-        point = strip1[0]
-        line = strip2
-        # Project the point onto the line
-        projection = get_projection_point_on_strip(point, line)
-        # Return the distance between the point and its projection
-        return distance(point, projection)
-    
-    # Case 3: First strip is a line, second is a point
-    elif strip2[1] is None:
-        point = strip2[0]
-        line = strip1
-        # Project the point onto the line
-        projection = get_projection_point_on_strip(point, line)
-        # Return the distance between the point and its projection
-        return distance(point, projection)
-    
-    # Case 4: Both strips are lines (assumed to be parallel)
-    else:
-        # Take a point from the first line
-        point = strip1[0]
-        # Project it onto the second line
-        projection = get_projection_point_on_strip(point, strip2)
-        # Return the distance between the point and its projection
-        return distance(point, projection)
-
+    return abs(signed_distance_strips(strip1, strip2))

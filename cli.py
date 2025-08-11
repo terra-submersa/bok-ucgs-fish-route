@@ -12,7 +12,6 @@ that all waypoint coordinates are stored in the UTM referential.
 import logging
 import os
 import tempfile
-from email.policy import default
 
 import click
 from flask import Flask
@@ -22,7 +21,8 @@ from bok_ucgs_fish_route.coordinates.route import create_route_segment_from_coor
 from bok_ucgs_fish_route.coordinates.waypoint import WaypointCoordinate
 from bok_ucgs_fish_route.exporter.map_exporter import export_route_segment_to_png
 from bok_ucgs_fish_route.exporter.ucgs_exporter import export_ucgs_json
-from bok_ucgs_fish_route.route_planner.lawn_mower import create_lawn_mower_band_strips, stitch_strips, extend_strip_perpendicular_ending
+from bok_ucgs_fish_route.route_planner.lawn_mower import create_lawn_mower_band_strips, stitch_strips, extend_strips_perpendicular_ending, \
+    reorder_strips_turning_radius
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -72,6 +72,7 @@ app = Flask(__name__)
 @click.option("--altitude", type=float, default=4)
 @click.option("--speed", type=float, default=2)
 @click.option("--band-width", type=float, default=1)
+@click.option("--turning_radius", type=float, default=0)
 @click.option("--angle", type=float, default=0.0,
               help="Angle in degrees for lawn mowing direction. 0 is South->North, 90 is East->West (default: 0.0)")
 @click.option("--utm", type=str, help="UTM zone (e.g., '34N') if coordinates are in UTM instead of WGS84")
@@ -79,7 +80,8 @@ app = Flask(__name__)
 @click.option("--name", "route_name", type=str, help="route name (optional)")
 @click.option("--image", "out_image", type=str, help="output image file path (optional)")
 @click.option("--ucgs", "out_ucgs", type=str, help="output ucgs json file path (optional)")
-def generate_lawn_mowing(lon1, lat1, lon2, lat2, altitude, speed, band_width, angle, utm=None, epsg=None, route_name="to nowhere", out_image=None,
+def generate_lawn_mowing(lon1, lat1, lon2, lat2, altitude, speed, turning_radius, band_width, angle, utm=None, epsg=None, route_name="to nowhere",
+                         out_image=None,
                          out_ucgs=None):
     # Create the corner coordinates
     corner1, corner2, utm_corner1, utm_corner2, utm_epsg = extract_utm_corners_utm_epsg(lat1, lat2, lon1, lon2, utm)
@@ -92,7 +94,9 @@ def generate_lawn_mowing(lon1, lat1, lon2, lat2, altitude, speed, band_width, an
         angle
     )
 
-    strips = extend_strip_perpendicular_ending(strips)
+    if turning_radius > 0:
+        strips = reorder_strips_turning_radius(strips, turning_radius)
+    strips = extend_strips_perpendicular_ending(strips)
     coordinates = stitch_strips(strips)
 
     # Create the route segment from coordinates

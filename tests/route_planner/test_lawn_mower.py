@@ -8,7 +8,8 @@ from bok_ucgs_fish_route.coordinates.conversion import wgs84_to_utm
 from bok_ucgs_fish_route.coordinates.route import RouteSegment, create_route_segment_from_coordinates
 from bok_ucgs_fish_route.route_planner import create_lawn_mower_band_strips
 from bok_ucgs_fish_route.route_planner.lawn_mower import find_line_rectangle_intersections, find_horizontal_intersect, find_vertical_intersect, \
-    two_points_angle, stitch_strips, is_perpendicular_ahead_of_strip, get_projection_point_on_strip, distance_strips
+    two_points_angle, stitch_strips, is_perpendicular_ahead_of_strip, get_projection_point_on_strip, distance_strips, signed_distance_strips, rearrange_index_shortest_path, \
+    create_parallel_strip
 
 
 @pytest.mark.parametrize("corner1, corner2, speed, band_distance, angle", [
@@ -296,39 +297,39 @@ def test_find_line_rectangle_intersections(rectangle_corners, point, vector, exp
 @pytest.mark.parametrize("point, strip, expected", [
     # Test case 1: Point ahead of strip
     (
-        (5, 5),  # point
-        ((0, 0), (3, 3)),  # strip (start, end)
-        True  # expected result - point is ahead of strip
+            (5, 5),  # point
+            ((0, 0), (3, 3)),  # strip (start, end)
+            True  # expected result - point is ahead of strip
     ),
     # Test case 2: Point behind strip
     (
-        (-1, -1),  # point
-        ((0, 0), (3, 3)),  # strip (start, end)
-        False  # expected result - point is behind strip
+            (-1, -1),  # point
+            ((0, 0), (3, 3)),  # strip (start, end)
+            False  # expected result - point is behind strip
     ),
     # Test case 3: Point on the strip line but before the end
     (
-        (2, 2),  # point
-        ((0, 0), (3, 3)),  # strip (start, end)
-        False  # expected result - point is on the line but not ahead
+            (2, 2),  # point
+            ((0, 0), (3, 3)),  # strip (start, end)
+            False  # expected result - point is on the line but not ahead
     ),
     # Test case 4: Point exactly at the end of strip
     (
-        (3, 3),  # point
-        ((0, 0), (3, 3)),  # strip (start, end)
-        False  # expected result - point is at the end, not ahead
+            (3, 3),  # point
+            ((0, 0), (3, 3)),  # strip (start, end)
+            False  # expected result - point is at the end, not ahead
     ),
     # Test case 5: Horizontal strip
     (
-        (5, 0),  # point
-        ((0, 0), (3, 0)),  # strip (start, end)
-        True  # expected result - point is ahead of strip
+            (5, 0),  # point
+            ((0, 0), (3, 0)),  # strip (start, end)
+            True  # expected result - point is ahead of strip
     ),
     # Test case 6: Vertical strip
     (
-        (0, 5),  # point
-        ((0, 0), (0, 3)),  # strip (start, end)
-        True  # expected result - point is ahead of strip
+            (0, 5),  # point
+            ((0, 0), (0, 3)),  # strip (start, end)
+            True  # expected result - point is ahead of strip
     ),
 ])
 def test_is_perpendicular_ahead_of_strip(point, strip, expected):
@@ -340,51 +341,51 @@ def test_is_perpendicular_ahead_of_strip(point, strip, expected):
 @pytest.mark.parametrize("point, strip, expected_projection", [
     # Test case 1: Point directly on the strip
     (
-        (2, 2),  # point
-        ((0, 0), (4, 4)),  # strip (start, end)
-        (2, 2)  # expected projection - same as point
+            (2, 2),  # point
+            ((0, 0), (4, 4)),  # strip (start, end)
+            (2, 2)  # expected projection - same as point
     ),
     # Test case 2: Point perpendicular to the strip
     (
-        (0, 3),  # point
-        ((0, 0), (3, 0)),  # horizontal strip
-        (0, 0)  # expected projection
+            (0, 3),  # point
+            ((0, 0), (3, 0)),  # horizontal strip
+            (0, 0)  # expected projection
     ),
     # Test case 3: Point with non-trivial projection
     (
-        (1, 2),  # point
-        ((0, 0), (4, 4)),  # diagonal strip
-        (1.5, 1.5)  # expected projection
+            (1, 2),  # point
+            ((0, 0), (4, 4)),  # diagonal strip
+            (1.5, 1.5)  # expected projection
     ),
     # Test case 4: Point with projection beyond strip end
     (
-        (5, 3),  # point
-        ((0, 0), (4, 4)),  # diagonal strip
-        (4, 4)  # expected projection - clamped to strip end
+            (5, 3),  # point
+            ((0, 0), (4, 4)),  # diagonal strip
+            (4, 4)  # expected projection - clamped to strip end
     ),
     # Test case 5: Point with projection before strip start
     (
-        (-1, 2),  # point
-        ((0, 0), (4, 4)),  # diagonal strip
-        (0.5, 0.5)  # expected projection
+            (-1, 2),  # point
+            ((0, 0), (4, 4)),  # diagonal strip
+            (0.5, 0.5)  # expected projection
     ),
     # Test case 6: Vertical strip
     (
-        (3, 2),  # point
-        ((0, 0), (0, 4)),  # vertical strip
-        (0, 2)  # expected projection
+            (3, 2),  # point
+            ((0, 0), (0, 4)),  # vertical strip
+            (0, 2)  # expected projection
     ),
     # Test case 7: Zero-length strip
     (
-        (3, 3),  # point
-        ((2, 2), (2, 2)),  # zero-length strip
-        (2, 2)  # expected projection - strip start/end point
+            (3, 3),  # point
+            ((2, 2), (2, 2)),  # zero-length strip
+            (2, 2)  # expected projection - strip start/end point
     ),
 ])
 def test_get_projection_point_on_strip(point, strip, expected_projection):
     """Test the function that computes the perpendicular projection of a point onto a strip."""
     projection = get_projection_point_on_strip(point, strip)
-    
+
     # Use approx for floating point comparisons
     assert projection[0] == approx(expected_projection[0])
     assert projection[1] == approx(expected_projection[1])
@@ -393,50 +394,233 @@ def test_get_projection_point_on_strip(point, strip, expected_projection):
 @pytest.mark.parametrize("strip1, strip2, expected_distance", [
     # Case 1: Two points
     (
-        ((1, 1), None),  # First strip (point)
-        ((4, 5), None),  # Second strip (point)
-        5.0  # Expected distance (Euclidean)
+            ((1, 1), None),  # First strip (point)
+            ((4, 5), None),  # Second strip (point)
+            5.0  # Expected distance (Euclidean)
     ),
     # Case 2: Point and line
     (
-        ((3, 4), None),  # First strip (point)
-        ((0, 0), (10, 0)),  # Second strip (horizontal line)
-        4.0  # Expected distance (perpendicular)
+            ((3, 4), None),  # First strip (point)
+            ((0, 0), (10, 0)),  # Second strip (horizontal line)
+            4.0  # Expected distance (perpendicular)
     ),
     # Case 3: Line and point
     (
-        ((0, 0), (0, 10)),  # First strip (vertical line)
-        ((5, 5), None),  # Second strip (point)
-        5.0  # Expected distance (perpendicular)
+            ((0, 0), (0, 10)),  # First strip (vertical line)
+            ((5, 5), None),  # Second strip (point)
+            5.0  # Expected distance (perpendicular)
     ),
     # Case 4: Two parallel lines
     (
-        ((0, 0), (10, 0)),  # First strip (horizontal line)
-        ((0, 5), (10, 5)),  # Second strip (parallel horizontal line)
-        5.0  # Expected distance (perpendicular)
+            ((0, 0), (10, 0)),  # First strip (horizontal line)
+            ((0, 5), (10, 5)),  # Second strip (parallel horizontal line)
+            5.0  # Expected distance (perpendicular)
     ),
     # Case 5: Two parallel diagonal lines
     (
-        ((0, 0), (10, 10)),  # First strip (diagonal line)
-        ((0, 5), (10, 15)),  # Second strip (parallel diagonal line)
-        3.5355  # Expected distance (perpendicular) - sqrt(5^2/2)
+            ((0, 0), (10, 10)),  # First strip (diagonal line)
+            ((0, 5), (10, 15)),  # Second strip (parallel diagonal line)
+            3.5355  # Expected distance (perpendicular) - sqrt(5^2/2)
     ),
     # Case 6: Zero distance (overlapping lines)
     (
-        ((0, 0), (10, 0)),  # First strip
-        ((5, 0), (15, 0)),  # Second strip (same line)
-        0.0  # Expected distance
+            ((0, 0), (10, 0)),  # First strip
+            ((5, 0), (15, 0)),  # Second strip (same line)
+            0.0  # Expected distance
     ),
     # Case 7: Point on line
     (
-        ((5, 0), None),  # First strip (point)
-        ((0, 0), (10, 0)),  # Second strip (line)
-        0.0  # Expected distance
+            ((5, 0), None),  # First strip (point)
+            ((0, 0), (10, 0)),  # Second strip (line)
+            0.0  # Expected distance
     ),
 ])
 def test_distance_strips(strip1, strip2, expected_distance):
     """Test the function that computes the distance between two strips."""
     distance = distance_strips(strip1, strip2)
-    
+
     # Use approx for floating point comparisons
     assert distance == approx(expected_distance, abs=1e-4)
+
+
+@pytest.mark.parametrize("strip1, strip2, expected_distance", [
+    # Case 1: Two points (always positive)
+    (
+            ((1, 1), None),  # First strip (point)
+            ((4, 5), None),  # Second strip (point)
+            5.0  # Expected distance (Euclidean, always positive)
+    ),
+    # Case 2: Point and line - point on the right of the line (positive)
+    (
+            ((3, 4), None),  # First strip (point)
+            ((0, 0), (10, 0)),  # Second strip (horizontal line)
+            4.0  # Expected distance (perpendicular, positive)
+    ),
+    # Case 3: Point and line - point on the left of the line (negative)
+    (
+            ((3, -4), None),  # First strip (point)
+            ((0, 0), (10, 0)),  # Second strip (horizontal line)
+            -4.0  # Expected distance (perpendicular, negative)
+    ),
+    # Case 4: Line and point - point on the right of the line (positive)
+    (
+            ((0, 0), (0, 10)),  # First strip (vertical line)
+            ((5, 5), None),  # Second strip (point)
+            5.0  # Expected distance (perpendicular, positive)
+    ),
+    # Case 5: Line and point - point on the left of the line (negative)
+    (
+            ((0, 0), (0, 10)),  # First strip (vertical line)
+            ((-5, 5), None),  # Second strip (point)
+            -5.0  # Expected distance (perpendicular, negative)
+    ),
+    # Case 6: Two parallel lines - second line on the left of the first (positive)
+    (
+            ((0, 0), (10, 0)),  # First strip (horizontal line)
+            ((0, 5), (10, 5)),  # Second strip (parallel horizontal line above)
+            -5.0  # Expected distance (perpendicular, positive)
+    ),
+    # Case 7: Two parallel lines - second line on the right of the first (negative)
+    (
+            ((0, 0), (10, 0)),  # First strip (horizontal line)
+            ((0, -5), (10, -5)),  # Second strip (parallel horizontal line below)
+            5.0  # Expected distance (perpendicular, negative)
+    ),
+    # Case 8: Two parallel diagonal lines - second line on the left of the first (positive)
+    (
+            ((0, 0), (10, 10)),  # First strip (diagonal line)
+            ((0, 5), (10, 15)),  # Second strip (parallel diagonal line to the right)
+            -3.5355  # Expected distance (perpendicular, positive) - sqrt(5^2/2)
+    ),
+    # Case 9: Two parallel diagonal lines - second line on the left of the first (negative)
+    (
+            ((0, 0), (10, 10)),  # First strip (diagonal line)
+            ((-5, 5), (5, 15)),  # Second strip (parallel diagonal line to the left)
+            -7.0710678118654755  # Expected distance (perpendicular, negative) - -sqrt(5^2*2)
+    ),
+    # Case 9': Two parallel diagonal lines - case 8 reversed
+    (
+            ((0, 5), (10, 15)),
+            ((0, 0), (10, 10)),
+            3.5355  # Expected distance (perpendicular, negative) - -sqrt(5^2/2)
+    ),
+    # Case 10: Zero distance (overlapping lines)
+    (
+            ((0, 0), (10, 0)),  # First strip
+            ((5, 0), (15, 0)),  # Second strip (same line)
+            0.0  # Expected distance (zero)
+    ),
+    # Case 11: Point on line
+    (
+            ((5, 0), None),  # First strip (point)
+            ((0, 0), (10, 0)),  # Second strip (line)
+            0.0  # Expected distance (zero)
+    ),
+])
+def test_signed_distance_strips(strip1, strip2, expected_distance):
+    """Test the function that computes the signed distance between two strips."""
+    distance = signed_distance_strips(strip1, strip2)
+
+    # Use approx for floating point comparisons
+    assert distance == approx(expected_distance, abs=1e-4)
+
+
+@pytest.mark.parametrize("n, lag", [
+    (4, 1),
+    (14, 3),
+    (25, 9),
+    (100, 17),
+    (5, 7),
+])
+def test_rearrange_index_shortest_path(n, lag):
+    got = rearrange_index_shortest_path(n, lag)
+
+    # no jump shorter than given lag
+    dist = [abs(p1 - p2) for p1, p2 in zip(got[:-1], got[1:])]
+    assert all(d >= lag for d in dist)
+    # no jump more than lag +1
+    assert all(d <= 2*lag + 1 for d in dist)
+
+    # all points in range are visited exactly once
+    for i in range(n):
+        print(f'{i} -> {got.count(i)}')
+        assert got.count(i) == 1
+
+    # assert we add n too many extra points (one per pass except last one)
+    got_extra = len([p for p in got if p < 0 or p >= n])
+    assert got_extra == lag - 1
+
+
+@pytest.mark.parametrize("strip, distance, expected_strip", [
+    # Case 1: Point strip (p2 is None) with positive distance
+    (
+            ((1, 2), None),  # Original strip (point)
+            3.0,  # Distance (positive, move right)
+            ((4, 2), None)  # Expected result
+    ),
+    # Case 2: Point strip (p2 is None) with negative distance
+    (
+            ((1, 2), None),  # Original strip (point)
+            -3.0,  # Distance (negative, move left)
+            ((-2, 2), None)  # Expected result
+    ),
+    # Case 3: Horizontal line with positive distance
+    (
+            ((0, 0), (10, 0)),  # Original strip (horizontal line)
+            5.0,  # Distance (positive, move up)
+            ((0, 5), (10, 5))  # Expected result
+    ),
+    # Case 4: Horizontal line with negative distance
+    (
+            ((0, 0), (10, 0)),  # Original strip (horizontal line)
+            -5.0,  # Distance (negative, move down)
+            ((0, -5), (10, -5))  # Expected result
+    ),
+    # Case 5: Vertical line with positive distance
+    (
+            ((0, 0), (0, 10)),  # Original strip (vertical line)
+            5.0,  # Distance (positive, move right)
+            ((5, 0), (5, 10))  # Expected result
+    ),
+    # Case 6: Vertical line with negative distance
+    (
+            ((0, 0), (0, 10)),  # Original strip (vertical line)
+            -5.0,  # Distance (negative, move left)
+            ((-5, 0), (-5, 10))  # Expected result
+    ),
+    # Case 7: Diagonal line with positive distance
+    (
+            ((0, 0), (10, 10)),  # Original strip (diagonal line)
+            5.0,  # Distance (positive)
+            ((3.5355, -3.5355), (13.5355, 6.4645))  # Expected result
+    ),
+    # Case 8: Diagonal line with negative distance
+    (
+            ((0, 0), (10, 10)),  # Original strip (diagonal line)
+            -5.0,  # Distance (negative)
+            ((-3.5355, 3.5355), (6.4645, 13.5355))  # Expected result
+    ),
+    # Case 9: Zero-length strip (both points are the same)
+    (
+            ((2, 2), (2, 2)),  # Original strip (zero-length)
+            3.0,  # Distance
+            ((5, 2), None)  # Expected result (treated as a point)
+    ),
+])
+def test_create_parallel_strip(strip, distance, expected_strip):
+    """Test the function that creates a parallel strip at a specified distance."""
+    result = create_parallel_strip(strip, distance)
+    
+    # Check if the result has the expected structure
+    assert len(result) == 2
+    
+    # Check the first point
+    assert result[0][0] == approx(expected_strip[0][0], abs=1e-4)
+    assert result[0][1] == approx(expected_strip[0][1], abs=1e-4)
+    
+    # Check the second point (which might be None)
+    if expected_strip[1] is None:
+        assert result[1] is None
+    else:
+        assert result[1][0] == approx(expected_strip[1][0], abs=1e-4)
+        assert result[1][1] == approx(expected_strip[1][1], abs=1e-4)

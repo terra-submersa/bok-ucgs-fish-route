@@ -154,6 +154,10 @@ def generate_lawn_mowing(lon1, lat1, lon2, lat2, altitude, speed, turning_radius
  
    - --utm: UTM zone (e.g., '34N') if coordinates are in UTM instead of WGS84
    - --ucgs: the json file name to export to rute to be imported in UCGS
+   - --altitude=z altitude in meters (default: 4)
+   - --speed=v speed in meters per second (default: 2)
+   - --nb-times=n number of times to repeat the route (default: 2). 0 means only onw way
+   - --name: the route name (optional)
  
  Example:
      # Using WGS84 coordinates (degrees)
@@ -190,9 +194,12 @@ def generate_back_and_forth(lon1, lat1, lon2, lat2, altitude, speed, nb_times: i
     route_2_segments = add_water_entry_exit_segments(route_2, traveling_altitude=10)
 
     route_seggments = []
-    for _ in range(nb_times):
+    if nb_times == 0:
         route_seggments.extend(route_1_segments)
-        route_seggments.extend(route_2_segments)
+    else:
+        for _ in range(nb_times):
+            route_seggments.extend(route_1_segments)
+            route_seggments.extend(route_2_segments)
 
     if out_ucgs:
         export_ucgs_json(route_seggments, out_ucgs, route_name=route_name, epsg_code='4326')

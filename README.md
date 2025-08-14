@@ -29,6 +29,20 @@ Moreover, we can not the water landing trajectory.
 The most attentive would notice that the flight is over land. Well, that ws the first test...
 ![img.png](img.png)
 
+This flight ws generated with the following command, and then imported in to UcGS
+
+    flask --app cli.py generate-lawn-mowing \
+          --angle 30 \
+          --name 'little marsh 3m'  \
+          --image tmp/little-marsh-3m-turn.png \
+          --ucgs tmp/little-marsh-3m.json \
+          --altitude=3 \
+          --speed=2 \
+          --band-width=0.8 \
+          --turning_radius=2 \
+          23.142148 37.414257 23.142061 37.414203
+
+
 ## Dev
 This project was a discovery of Junie in Jetbrains (Cursor-type tool) when you enter [tasks](docs/tasks.md) and [guidelines](.junie/guidelines.md).
 

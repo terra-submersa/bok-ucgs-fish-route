@@ -6,9 +6,13 @@ from typing import Tuple, List
 logger = logging.getLogger(__name__)
 
 
-def stitch_strips(strips: List[Tuple[Tuple[float, float], Tuple[float, float] | None]]) -> List[Tuple[float, float]]:
+def stitch_strips(
+        strips: List[Tuple[Tuple[float, float], Tuple[float, float] | None]],
+        turning_radius: float = None
+) -> List[Tuple[float, float]]:
     coordinates = []
     for i, strip in enumerate(strips):
+        next_strip = strips[i + 1] if i < len(strips) - 1 else None
         if strip[1] is None:
             coordinates.append(strip[0])
             continue
@@ -18,7 +22,18 @@ def stitch_strips(strips: List[Tuple[Tuple[float, float], Tuple[float, float] | 
         else:
             coordinates.append(strip[1])
             coordinates.append(strip[0])
-
+        if next_strip and turning_radius:
+            is_right = signed_distance_strips(strip, next_strip) > 0
+            if i % 2 == 0:
+                if is_right:
+                    coordinates.extend(add_circle_end_of_strips(strip, next_strip, clock_wise=True, min_point_distance=1))
+                else:
+                    coordinates.extend(add_circle_end_of_strips(strip, next_strip, clock_wise=False, min_point_distance=1))
+            else:
+                if is_right:
+                    coordinates.extend(add_circle_end_of_strips(reverse_strip(strip), reverse_strip(next_strip), clock_wise=False, min_point_distance=1))
+                else:
+                    coordinates.extend(add_circle_end_of_strips(reverse_strip(strip), reverse_strip(next_strip), clock_wise=True, min_point_distance=1))
     return coordinates
 
 
@@ -51,6 +66,38 @@ def extend_strips_perpendicular_ending(
                 ret_strips[i] = (get_projection_point_on_strip(start_point_2, rev_strip_1), strip_1[1])
 
     return ret_strips
+
+
+def add_circle_end_of_strips(
+        strip_1: Tuple[Tuple[float, float], Tuple[float, float] | None],
+        strip_2: Tuple[Tuple[float, float], Tuple[float, float] | None],
+        clock_wise: bool = True,
+        min_point_distance: float = 1,
+) -> List[Tuple[float, float]]:
+    """
+    we assume strips endings are perpendicular.
+    We add strips to join the circle ends.
+    """
+    p1 = strip_1[0] if strip_1[1] is None else strip_1[1]
+    p2 = strip_2[0] if strip_2[1] is None else strip_2[1]
+    cx = (p1[0] + p2[0]) / 2
+    cy = (p1[1] + p2[1]) / 2
+    diameter_angle = two_points_angle(p1, p2) * math.pi / 180
+    radius = distance(p1, p2) / 2
+    alpha = 2 * math.asin(min_point_distance / radius)
+    nb_sectors = math.ceil(math.pi / alpha)
+    alpha_step = math.pi / nb_sectors
+    circle_coords = []
+    for i in range(1, nb_sectors):
+        if clock_wise:
+            angle = - diameter_angle - (alpha_step * i) - math.pi / 2
+        else:
+            angle = - diameter_angle + (alpha_step * i) - math.pi / 2
+
+        px = cx + radius * math.cos(angle)
+        py = cy + radius * math.sin(angle)
+        circle_coords.append((px, py))
+    return circle_coords
 
 
 def rearrange_index_shortest_path(n: int, lag: int) -> list[int]:
@@ -240,7 +287,7 @@ def distance(p1: Tuple[float, float], p2: Tuple[float, float]) -> float:
     return math.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2)
 
 
-def two_points_angle(p1: Tuple[float, float], p2: Tuple[float, float]) -> float:
+def two_points_angle(p1: Tuple[float, float], p2: Tuple[float, float] | None) -> float:
     dx = p2[0] - p1[0]
     dy = p2[1] - p1[1]
     return math.atan2(dx, dy) / math.pi * 180

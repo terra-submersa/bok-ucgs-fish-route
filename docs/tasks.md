@@ -96,3 +96,4 @@ implemented by Junie.
 * [x] refactor function `distance_strips` into `signed_distance_strips`
   * the distance is negative if the second strip is on the left of the first one, positive it is on the right.
   * if the two stripc are points, distance is positive
+* [x] if turning radius, add a circle ad the end of extended strips, with  minimal distance on the circle of 1 m

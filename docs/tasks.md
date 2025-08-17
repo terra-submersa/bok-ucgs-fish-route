@@ -98,3 +98,4 @@ implemented by Junie.
   * if the two stripc are points, distance is positive
 * [x] if turning radius, add a circle ad the end of extended strips, with  minimal distance on the circle of 1 m
 * [ ] back-and-forth with --nb-times=0 means only a single trip
+* [ ] fly with point of view aligned to limit rotation when turning

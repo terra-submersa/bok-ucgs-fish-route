@@ -37,13 +37,23 @@ else:
   inefficient directions.
 * Junie overcomplicates things (make three functions for vertical, horizontal, angled route, for example). I could rewrite
   everything in one,
+* I've seen it duplicating function, instead of reusing in another package. But the duplication was exact, so it read from the other...
   dividing by at least 5 times fewer code lines
 * Concept refactoring ("let's forget using WGS84 system by defaukt and go to UTM for simpler computations)
 * Comments are a bit too verbose. Just repeating in text what is actually done
 * Does not pull out simple functions from a larger one for independent testing.
+* We have a situation reading input lines of type A and B
+  * A contains date
+  * B contains time + coordinates
+  * A and B arrive in whatever order, independently, but regularly. A does not change much, as it is current date
+  * We can only save the coordinates if A was read at least once first.
+  * Junie implementation is correct, as it will keep latest A or B and save when it encounters the next one.
+  * **weakness**: it does not ask: "can we skipp saving B data until we have met the first A, as it would make the code easy to read and maintain?" Yes, because we would lose at most one point, that come 5 per second...
+* Generally, it adds a lot of edge case scenarios, that pollute the overall code understanding
 
 # How I came to use
 
 * for complex task, I use it to implement intermediary functions, where I provide the doc string.
 * I can read the test, but the amount of code written can be a bit overwhelming. I soon turn into trusting with too much
   attention (out of laziness). Still something to catch upon. 
+* Beware of rebound effect, as it can be hard to understand what is going on. I have to go clean after it

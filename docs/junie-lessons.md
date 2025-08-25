@@ -14,6 +14,7 @@ After qui te some time finding reasns not to try these LLM coding assistant, I p
   longitude, latitude"
 * "messy task" such as "print the route in a PNG with an OpenStreetMap background"
 * easy maths are done correctly (distance between vectors, build a parallel vector, vector angle, etc.)
+* transforming the code base into a pipy deployable package
 
 # The weaknesses
 
